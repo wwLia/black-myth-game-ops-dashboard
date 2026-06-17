@@ -1,0 +1,32 @@
+# dependencies
+node_modules/
+
+# Next.js
+.next/
+.next-local/
+out/
+
+# local env
+.env
+.env.*
+!.env.example
+
+# local tooling / credentials
+.codex/
+.agents/
+auth.json
+*.pem
+
+# logs and caches
+*.log
+.npm-cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# raw/private datasets
+*.csv

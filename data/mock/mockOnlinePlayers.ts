@@ -1,0 +1,28 @@
+import type { PlayerTrendPoint } from "@/types/dashboard";
+
+export const mockOnlinePlayers: PlayerTrendPoint[] = [
+  { source_type: "mock", timestamp: "2024-08-20T02:00:00+08:00", online_players: 618000, platform: "Steam", game: "Black Myth: Wukong", event_id: "launch" },
+  { source_type: "mock", timestamp: "2024-08-20T04:00:00+08:00", online_players: 735000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-20T06:00:00+08:00", online_players: 842000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-20T08:00:00+08:00", online_players: 1048000, platform: "Steam", game: "Black Myth: Wukong", event_id: "steam-review-spike" },
+  { source_type: "mock", timestamp: "2024-08-20T10:00:00+08:00", online_players: 1236000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-20T12:00:00+08:00", online_players: 1382000, platform: "Steam", game: "Black Myth: Wukong", event_id: "community-buzz" },
+  { source_type: "mock", timestamp: "2024-08-20T14:00:00+08:00", online_players: 1536000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-20T16:00:00+08:00", online_players: 1649000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-20T18:00:00+08:00", online_players: 1763000, platform: "Steam", game: "Black Myth: Wukong", event_id: "performance-controversy" },
+  { source_type: "mock", timestamp: "2024-08-20T20:00:00+08:00", online_players: 1842300, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-20T22:00:00+08:00", online_players: 1687000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-21T00:00:00+08:00", online_players: 1398000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-21T02:00:00+08:00", online_players: 1186000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-21T04:00:00+08:00", online_players: 1052000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-21T06:00:00+08:00", online_players: 982000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-21T08:00:00+08:00", online_players: 1119000, platform: "Steam", game: "Black Myth: Wukong", event_id: "boss-difficulty" },
+  { source_type: "mock", timestamp: "2024-08-21T10:00:00+08:00", online_players: 1264000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-21T12:00:00+08:00", online_players: 1391000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-21T14:00:00+08:00", online_players: 1517000, platform: "Steam", game: "Black Myth: Wukong", event_id: "domestic-breakout" },
+  { source_type: "mock", timestamp: "2024-08-21T16:00:00+08:00", online_players: 1634000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-21T18:00:00+08:00", online_players: 1728000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-21T20:00:00+08:00", online_players: 1815000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-21T22:00:00+08:00", online_players: 1702000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+  { source_type: "mock", timestamp: "2024-08-22T00:00:00+08:00", online_players: 1469000, platform: "Steam", game: "Black Myth: Wukong", event_id: null },
+];

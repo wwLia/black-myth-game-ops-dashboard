@@ -1,0 +1,204 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import ReactECharts from "echarts-for-react";
+import type { EChartsType } from "echarts";
+import { DataSourceBadge } from "@/components/DataSourceBadge";
+import type { PlaytimeDistributionSegment } from "@/types/dashboard";
+
+export type PlaytimeDistributionChartProps = {
+  data: PlaytimeDistributionSegment[];
+  activeSegment: string;
+  onSegmentClick: (segment: string) => void;
+};
+type RendererClickEvent = { offsetX?: number; offsetY?: number; zrX?: number; zrY?: number };
+
+export function PlaytimeDistributionChart({
+  data,
+  activeSegment,
+  onSegmentClick,
+}: PlaytimeDistributionChartProps) {
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const handleContainerClick = (event: MouseEvent | PointerEvent | React.MouseEvent<HTMLDivElement>) => {
+    const box = chartContainerRef.current?.getBoundingClientRect();
+
+    if (!box || !data.length) {
+      return;
+    }
+
+    const ratio = (event.clientX - box.left) / box.width;
+    const dataIndex = Math.min(data.length - 1, Math.max(0, Math.floor(ratio * data.length)));
+    const segment = data[dataIndex]?.segment;
+
+    if (segment) {
+      onSegmentClick(segment);
+    }
+  };
+  useEffect(() => {
+    const container = chartContainerRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    container.addEventListener("click", handleContainerClick, true);
+    container.addEventListener("pointerdown", handleContainerClick, true);
+
+    return () => {
+      container.removeEventListener("click", handleContainerClick, true);
+      container.removeEventListener("pointerdown", handleContainerClick, true);
+    };
+  });
+  const handleChartReady = (chart: EChartsType) => {
+    const renderer = chart.getZr();
+    renderer.off("click");
+    renderer.on("click", (event: RendererClickEvent) => {
+      const x = event.offsetX ?? event.zrX ?? 0;
+      const y = event.offsetY ?? event.zrY ?? 0;
+      const convertedValue = chart.convertFromPixel({ xAxisIndex: 0 }, [x, y]);
+      const rawIndex = Array.isArray(convertedValue) ? convertedValue[0] : convertedValue;
+      const dataIndex = Math.round(Number(rawIndex));
+      const segment = data[dataIndex]?.segment;
+
+      if (segment) {
+        onSegmentClick(segment);
+      }
+    });
+  };
+
+  if (!data.length) {
+    return <ChartEmptyState height={320} />;
+  }
+
+  const option = {
+    color: ["#38bdf8", "#34d399"],
+    tooltip: {
+      trigger: "axis",
+      axisPointer: { type: "shadow" },
+      backgroundColor: "rgba(2,6,23,0.94)",
+      borderColor: "rgba(103,232,249,0.25)",
+      textStyle: { color: "#e2e8f0" },
+      formatter: (params: Array<{ name: string }>) => {
+        const segment = data.find((item) => item.range === params[0]?.name);
+
+        if (!segment) {
+          return "";
+        }
+
+        return [
+          `<strong>${segment.range}</strong>`,
+          `评论数：${segment.players.toLocaleString("zh-CN")}`,
+          `推荐数：${segment.recommendedReviews.toLocaleString("zh-CN")}`,
+          `不推荐数：${segment.notRecommendedReviews.toLocaleString("zh-CN")}`,
+          `推荐率：${segment.recommendRate.toFixed(1)}%`,
+        ].join("<br/>");
+      },
+    },
+    legend: { top: 0, textStyle: { color: "#cbd5e1" } },
+    grid: { left: 52, right: 48, top: 48, bottom: 42 },
+    xAxis: {
+      type: "category",
+      data: data.map((item) => item.range),
+      axisLabel: { color: "#94a3b8" },
+      axisLine: { lineStyle: { color: "#334155" } },
+    },
+    yAxis: [
+      {
+        type: "value",
+        name: "评论数",
+        nameTextStyle: { color: "#94a3b8" },
+        axisLabel: { color: "#94a3b8" },
+        splitLine: { lineStyle: { color: "rgba(148,163,184,0.16)" } },
+      },
+      {
+        type: "value",
+        name: "推荐率",
+        min: 0,
+        max: 100,
+        nameTextStyle: { color: "#94a3b8" },
+        axisLabel: { color: "#94a3b8", formatter: "{value}%" },
+        splitLine: { show: false },
+      },
+    ],
+    series: [
+      {
+        name: "评论数",
+        type: "bar",
+        barWidth: 28,
+        data: data.map((item) => ({
+          value: item.players,
+          itemStyle: {
+            color:
+              activeSegment === item.segment
+                ? "#67e8f9"
+                : {
+                    type: "linear",
+                    x: 0,
+                    y: 0,
+                    x2: 0,
+                    y2: 1,
+                    colorStops: [
+                      { offset: 0, color: "#38bdf8" },
+                      { offset: 1, color: "rgba(14,165,233,0.35)" },
+                    ],
+                  },
+            borderColor: activeSegment === item.segment ? "#cffafe" : "rgba(125,211,252,0.25)",
+            borderWidth: activeSegment === item.segment ? 2 : 1,
+            borderRadius: [6, 6, 0, 0],
+          },
+        })),
+        label: {
+          show: true,
+          position: "top",
+          color: "#e2e8f0",
+          formatter: (params: { dataIndex: number }) => data[params.dataIndex].players.toLocaleString("zh-CN"),
+        },
+      },
+      {
+        name: "推荐率",
+        type: "line",
+        yAxisIndex: 1,
+        smooth: true,
+        symbolSize: 8,
+        data: data.map((item) => item.recommendRate),
+        lineStyle: { color: "#34d399", width: 3 },
+        itemStyle: { color: "#34d399", borderColor: "#bbf7d0", borderWidth: 1 },
+        label: {
+          show: true,
+          position: "top",
+          color: "#bbf7d0",
+          formatter: (params: { value: number }) => `${Number(params.value).toFixed(1)}%`,
+        },
+      },
+    ],
+  };
+
+  return (
+    <div ref={chartContainerRef} className="relative">
+      <DataSourceBadge sourceType="real" className="absolute right-3 top-2 z-10" />
+      <ReactECharts
+        option={option}
+        style={{ height: 320 }}
+        onChartReady={handleChartReady}
+        onEvents={{
+          click: (params: { componentType?: string; seriesType?: string; name?: string }) => {
+            if (params.componentType === "series" && params.seriesType === "bar" && params.name) {
+              onSegmentClick(params.name);
+            }
+          },
+        }}
+      />
+    </div>
+  );
+}
+
+function ChartEmptyState({ height }: { height: number }) {
+  return (
+    <div
+      className="flex items-center justify-center rounded border border-slate-800 bg-slate-950/45 text-sm text-slate-500"
+      style={{ height }}
+    >
+      {"当前筛选条件下暂无真实评论时长分布数据"}
+    </div>
+  );
+}
