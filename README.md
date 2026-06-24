@@ -38,6 +38,31 @@
 
 当前项目主要使用 ECharts 实现图表展示。
 
+## Demo Versions
+
+### V1 · Player Feedback Analytics Dashboard
+
+- 定位：展示真实 Steam 评论的数据清洗、用户分层、情绪主题分析和可视化能力
+- Branch：`demo-v1-original`
+- Tag：`v1.0-original`
+- 在线地址：`V1_DEMO_URL`
+
+### V2 · Publishing Decision Support Dashboard
+
+- 定位：将玩家反馈转化为发行、社区、产品和商务团队可执行的动作
+- Branch：`main`
+- Tag：`v2.0-decision-support`
+- 在线地址：[https://black-myth-game-ops-dashboard-5myh.vercel.app/](https://black-myth-game-ops-dashboard-5myh.vercel.app/)
+
+| 对比维度 | V1 | V2 |
+| --- | --- | --- |
+| 数据表达 | KPI 和图表 | 增加数据来源、边界和置信度 |
+| 洞察输出 | 分析结果 | 事实、判断和行动 |
+| 玩家分层 | 时长与情绪散点 | 决策四象限 |
+| 负面反馈 | 评论列表 | 跨团队反馈处理池 |
+| 发行场景 | 较弱 | 增加传播风险和内容机会 |
+| 数据边界 | 基础说明 | 增加方法、局限和未来接入 |
+
 ## 本地运行
 
 安装依赖：
