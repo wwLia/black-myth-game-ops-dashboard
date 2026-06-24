@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import ReactECharts from "echarts-for-react";
+import { ClientECharts } from "@/components/ClientECharts";
 import type { EChartsType } from "echarts";
 import { DataSourceBadge } from "@/components/DataSourceBadge";
 import type { PlaytimeDistributionSegment } from "@/types/dashboard";
@@ -70,6 +70,20 @@ export function PlaytimeDistributionChart({
     return <ChartEmptyState height={320} />;
   }
 
+  const safeData = data
+    .map((item) => ({
+      ...item,
+      players: finiteNumber(item.players),
+      recommendedReviews: finiteNumber(item.recommendedReviews),
+      notRecommendedReviews: finiteNumber(item.notRecommendedReviews),
+      recommendRate: finiteNumber(item.recommendRate),
+    }))
+    .filter((item) => item.range && item.players >= 0);
+
+  if (!safeData.length) {
+    return <ChartEmptyState height={320} />;
+  }
+
   const option = {
     color: ["#38bdf8", "#34d399"],
     tooltip: {
@@ -79,7 +93,7 @@ export function PlaytimeDistributionChart({
       borderColor: "rgba(103,232,249,0.25)",
       textStyle: { color: "#e2e8f0" },
       formatter: (params: Array<{ name: string }>) => {
-        const segment = data.find((item) => item.range === params[0]?.name);
+        const segment = safeData.find((item) => item.range === params[0]?.name);
 
         if (!segment) {
           return "";
@@ -98,7 +112,7 @@ export function PlaytimeDistributionChart({
     grid: { left: 52, right: 48, top: 48, bottom: 42 },
     xAxis: {
       type: "category",
-      data: data.map((item) => item.range),
+      data: safeData.map((item) => item.range),
       axisLabel: { color: "#94a3b8" },
       axisLine: { lineStyle: { color: "#334155" } },
     },
@@ -125,7 +139,7 @@ export function PlaytimeDistributionChart({
         name: "评论数",
         type: "bar",
         barWidth: 28,
-        data: data.map((item) => ({
+        data: safeData.map((item) => ({
           value: item.players,
           itemStyle: {
             color:
@@ -151,7 +165,7 @@ export function PlaytimeDistributionChart({
           show: true,
           position: "top",
           color: "#e2e8f0",
-          formatter: (params: { dataIndex: number }) => data[params.dataIndex].players.toLocaleString("zh-CN"),
+          formatter: (params: { dataIndex: number }) => safeData[params.dataIndex].players.toLocaleString("zh-CN"),
         },
       },
       {
@@ -160,7 +174,7 @@ export function PlaytimeDistributionChart({
         yAxisIndex: 1,
         smooth: true,
         symbolSize: 8,
-        data: data.map((item) => item.recommendRate),
+        data: safeData.map((item) => item.recommendRate),
         lineStyle: { color: "#34d399", width: 3 },
         itemStyle: { color: "#34d399", borderColor: "#bbf7d0", borderWidth: 1 },
         label: {
@@ -174,11 +188,11 @@ export function PlaytimeDistributionChart({
   };
 
   return (
-    <div ref={chartContainerRef} className="relative">
+    <div ref={chartContainerRef} className="relative min-h-[320px] min-w-0">
       <DataSourceBadge sourceType="real" className="absolute right-3 top-2 z-10" />
-      <ReactECharts
+      <ClientECharts
         option={option}
-        style={{ height: 320 }}
+        style={{ width: "100%", height: 320 }}
         onChartReady={handleChartReady}
         onEvents={{
           click: (params: { componentType?: string; seriesType?: string; name?: string }) => {
@@ -190,6 +204,11 @@ export function PlaytimeDistributionChart({
       />
     </div>
   );
+}
+
+function finiteNumber(value: number): number {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : 0;
 }
 
 function ChartEmptyState({ height }: { height: number }) {

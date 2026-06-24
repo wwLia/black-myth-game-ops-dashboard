@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import ReactECharts from "echarts-for-react";
+import { ClientECharts } from "@/components/ClientECharts";
 import type { EChartsType } from "echarts";
 import { DataSourceBadge } from "@/components/DataSourceBadge";
 import type { TopicDistributionPoint } from "@/types/dashboard";
@@ -68,6 +68,20 @@ export function TopicDistributionChart({ data, activeTopic, onTopicClick }: Topi
     return <ChartEmptyState height={330} />;
   }
 
+  const safeData = data
+    .map((item) => ({
+      ...item,
+      reviewCount: finiteNumber(item.reviewCount),
+      recommendedReviews: finiteNumber(item.recommendedReviews),
+      notRecommendedReviews: finiteNumber(item.notRecommendedReviews),
+      recommendRate: finiteNumber(item.recommendRate),
+    }))
+    .filter((item) => item.topic && item.reviewCount >= 0);
+
+  if (!safeData.length) {
+    return <ChartEmptyState height={330} />;
+  }
+
   const option = {
     color: ["#22d3ee", "#34d399"],
     tooltip: {
@@ -77,7 +91,7 @@ export function TopicDistributionChart({ data, activeTopic, onTopicClick }: Topi
       borderColor: "rgba(103,232,249,0.28)",
       textStyle: { color: "#e2e8f0" },
       formatter: (params: Array<{ name: string }>) => {
-        const topic = data.find((item) => item.topic === params[0]?.name);
+        const topic = safeData.find((item) => item.topic === params[0]?.name);
 
         if (!topic) {
           return "";
@@ -101,7 +115,7 @@ export function TopicDistributionChart({ data, activeTopic, onTopicClick }: Topi
     grid: { left: 52, right: 48, top: 48, bottom: 72 },
     xAxis: {
       type: "category",
-      data: data.map((item) => item.topic),
+      data: safeData.map((item) => item.topic),
       axisLabel: { color: "#94a3b8", interval: 0, rotate: 22 },
       axisLine: { lineStyle: { color: "#334155" } },
     },
@@ -128,7 +142,7 @@ export function TopicDistributionChart({ data, activeTopic, onTopicClick }: Topi
         name: "评论数",
         type: "bar",
         barWidth: 24,
-        data: data.map((item) => ({
+        data: safeData.map((item) => ({
           value: item.reviewCount,
           itemStyle: {
             color:
@@ -156,7 +170,7 @@ export function TopicDistributionChart({ data, activeTopic, onTopicClick }: Topi
           show: true,
           position: "top",
           color: "#e2e8f0",
-          formatter: (params: { dataIndex: number }) => data[params.dataIndex].reviewCount.toLocaleString("zh-CN"),
+          formatter: (params: { dataIndex: number }) => safeData[params.dataIndex].reviewCount.toLocaleString("zh-CN"),
         },
       },
       {
@@ -165,7 +179,7 @@ export function TopicDistributionChart({ data, activeTopic, onTopicClick }: Topi
         yAxisIndex: 1,
         smooth: true,
         symbolSize: 8,
-        data: data.map((item) => item.recommendRate),
+        data: safeData.map((item) => item.recommendRate),
         lineStyle: { color: "#34d399", width: 3 },
         itemStyle: { color: "#34d399", borderColor: "#bbf7d0", borderWidth: 1 },
         markLine: {
@@ -186,11 +200,11 @@ export function TopicDistributionChart({ data, activeTopic, onTopicClick }: Topi
   };
 
   return (
-    <div ref={chartContainerRef} className="relative">
+    <div ref={chartContainerRef} className="relative min-h-[330px] min-w-0">
       <DataSourceBadge sourceType="real" className="absolute right-3 top-2 z-10" />
-      <ReactECharts
+      <ClientECharts
         option={option}
-        style={{ height: 330 }}
+        style={{ width: "100%", height: 330 }}
         onChartReady={handleChartReady}
         onEvents={{
           click: (params: { componentType?: string; seriesType?: string; name?: string }) => {
@@ -202,6 +216,11 @@ export function TopicDistributionChart({ data, activeTopic, onTopicClick }: Topi
       />
     </div>
   );
+}
+
+function finiteNumber(value: number): number {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : 0;
 }
 
 function ChartEmptyState({ height }: { height: number }) {

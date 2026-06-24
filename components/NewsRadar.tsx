@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import ReactECharts from "echarts-for-react";
+import { ClientECharts } from "@/components/ClientECharts";
 import { DataSourceBadge } from "@/components/DataSourceBadge";
 import type { NewsItem, NewsSentiment, RadarMetric } from "@/types/dashboard";
 import { cn } from "@/lib/utils";
@@ -66,7 +66,7 @@ export function NewsRadar({ metrics, news }: NewsRadarProps) {
   return (
     <div className="grid gap-4 lg:grid-cols-[0.86fr_1.14fr]">
       <div className="relative rounded border border-slate-800 bg-slate-950/35">
-        <ReactECharts option={option} style={{ height: 340 }} />
+        <ClientECharts option={option} style={{ width: "100%", height: 340 }} />
         <DataSourceBadge sourceType="mock" className="absolute right-3 top-3" />
         <span className="absolute right-3 top-12 text-xs text-slate-400">
           {"未来可接 NewsAPI / RSS / GDELT"}

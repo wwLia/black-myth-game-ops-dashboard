@@ -1,6 +1,6 @@
 "use client";
 
-import ReactECharts from "echarts-for-react";
+import { ClientECharts } from "@/components/ClientECharts";
 import { DataSourceBadge } from "@/components/DataSourceBadge";
 import type { OpsEvent, PlayerTrendPoint } from "@/types/dashboard";
 
@@ -113,7 +113,7 @@ export function OnlineTrendChart({ data, opsEvents, onEventClick }: OnlineTrendC
 
   return (
     <div className="relative">
-      <ReactECharts option={option} onEvents={onEvents} style={{ height: 330 }} notMerge lazyUpdate />
+      <ClientECharts option={option} onEvents={onEvents} style={{ width: "100%", height: 330 }} notMerge lazyUpdate />
       <DataSourceBadge sourceType="mock" className="absolute right-3 top-2" />
       <span className="absolute right-3 top-11 text-xs text-slate-400">
         {"未来可接 Steam API / 内部埋点"}

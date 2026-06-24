@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import ReactECharts from "echarts-for-react";
+import { ClientECharts } from "@/components/ClientECharts";
 import { DataSourceBadge } from "@/components/DataSourceBadge";
 import type { Review } from "@/types/dashboard";
 
@@ -88,8 +88,9 @@ export function PlaytimeSentimentScatter({
   onQuadrantSelect,
   onReviewClick,
 }: PlaytimeSentimentScatterProps) {
-  const sampledReviews = useMemo(() => sampleReviews(reviews, scatterSampleLimit, selectedReviewId), [
-    reviews,
+  const validReviews = useMemo(() => reviews.filter(hasValidScatterPoint), [reviews]);
+  const sampledReviews = useMemo(() => sampleReviews(validReviews, scatterSampleLimit, selectedReviewId), [
+    validReviews,
     selectedReviewId,
   ]);
   const scatterPoints: ScatterPoint[] = sampledReviews.map((review) => [
@@ -118,7 +119,7 @@ export function PlaytimeSentimentScatter({
     emphasis: { focus: "series", itemStyle: { opacity: 1, borderWidth: 2 } },
   }));
   const quadrantStats = quadrants.map((quadrant) => {
-    const quadrantReviews = reviews.filter(quadrant.filter);
+    const quadrantReviews = validReviews.filter(quadrant.filter);
     const recommended = quadrantReviews.filter((review) => review.recommendationGroup === "推荐").length;
     return {
       ...quadrant,
@@ -129,7 +130,7 @@ export function PlaytimeSentimentScatter({
     };
   });
 
-  if (!reviews.length) {
+  if (!validReviews.length) {
     return <ChartEmptyState height={360} />;
   }
 
@@ -201,11 +202,11 @@ export function PlaytimeSentimentScatter({
 
   return (
     <div className="space-y-4">
-      <div className="relative">
+      <div className="relative min-h-[360px] min-w-0">
         <DataSourceBadge sourceType="real" className="absolute right-3 top-2 z-10" />
-        <ReactECharts
+        <ClientECharts
           option={option}
-          style={{ height: 360 }}
+          style={{ width: "100%", height: 360 }}
           notMerge
           lazyUpdate
           onEvents={{
@@ -221,10 +222,17 @@ export function PlaytimeSentimentScatter({
 
       <div className="grid gap-3 xl:grid-cols-4">
         {quadrantStats.map((quadrant) => (
-          <button
+          <article
             key={quadrant.id}
-            type="button"
-            onClick={() => onQuadrantSelect(activeQuadrant === quadrant.id ? "全部" : quadrant.id)}
+            onClickCapture={() => onQuadrantSelect(activeQuadrant === quadrant.id ? "全部" : quadrant.id)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onQuadrantSelect(activeQuadrant === quadrant.id ? "全部" : quadrant.id);
+              }
+            }}
+            role="button"
+            tabIndex={0}
             className={`rounded border p-3 text-left transition ${
               activeQuadrant === quadrant.id
                 ? "border-cyan-300/55 bg-cyan-300/10"
@@ -244,10 +252,9 @@ export function PlaytimeSentimentScatter({
             </div>
             <div className="mt-3 space-y-2">
               {quadrant.examples.map((review) => (
-                <span
+                <button
                   key={review.id}
-                  role="button"
-                  tabIndex={0}
+                  type="button"
                   onClick={(event) => {
                     event.stopPropagation();
                     onReviewClick(review.id);
@@ -258,13 +265,13 @@ export function PlaytimeSentimentScatter({
                       onReviewClick(review.id);
                     }
                   }}
-                  className="block line-clamp-2 rounded border border-slate-800 bg-slate-900/45 px-2 py-1 text-xs leading-5 text-slate-300 hover:border-cyan-300/40"
+                  className="block w-full rounded border border-slate-800 bg-slate-900/45 px-2 py-1 text-left text-xs leading-5 text-slate-300 hover:border-cyan-300/40"
                 >
-                  {review.content}
-                </span>
+                  <span className="line-clamp-2">{review.content}</span>
+                </button>
               ))}
             </div>
-          </button>
+          </article>
         ))}
       </div>
     </div>
@@ -292,6 +299,10 @@ function rectGraphic(text: string, x: number, y: number, fill: string) {
 
 function isNegative(review: Review): boolean {
   return review.recommendationGroup === "不推荐" || review.sentimentText === "负向" || review.sentimentScore < 0;
+}
+
+function hasValidScatterPoint(review: Review): boolean {
+  return Number.isFinite(Number(review.playtimeHours)) && Number.isFinite(Number(review.sentimentScore));
 }
 
 function summarize(content: string): string {
