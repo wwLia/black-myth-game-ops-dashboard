@@ -26,8 +26,8 @@ export const reviews: Review[] = ([
   {
     id: "r-002",
     author: "MountainView",
-    platform: "PS5",
-    platformRaw: "PS5",
+    platform: "Steam",
+    platformRaw: "Steam",
     game: "Black Myth: Wukong",
     userSegment: "\u4e3b\u7ebf\u63a8\u8fdb",
     userSegmentGroup: "\u6838\u5fc3\u63a8\u8fdb",
@@ -70,8 +70,8 @@ export const reviews: Review[] = ([
   {
     id: "r-004",
     author: "OldJourney",
-    platform: "WeGame",
-    platformRaw: "WeGame",
+    platform: "Steam",
+    platformRaw: "Steam",
     game: "Black Myth: Wukong",
     userSegment: "\u6df1\u5ea6\u63a2\u7d22",
     userSegmentGroup: "\u6df1\u5ea6\u73a9\u5bb6",
@@ -92,8 +92,8 @@ export const reviews: Review[] = ([
   {
     id: "r-005",
     author: "FirstTry",
-    platform: "Xbox",
-    platformRaw: "Xbox",
+    platform: "Steam",
+    platformRaw: "Steam",
     game: "Black Myth: Wukong",
     userSegment: "\u8f7b\u5ea6\u4f53\u9a8c",
     userSegmentGroup: "\u8f7b\u5ea6\u4f53\u9a8c",

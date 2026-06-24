@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
 import ReactECharts from "echarts-for-react";
-import type { EChartsType } from "echarts";
 import { DataSourceBadge } from "@/components/DataSourceBadge";
 import type { Review } from "@/types/dashboard";
 
 export type PlaytimeSentimentScatterProps = {
   reviews: Review[];
   selectedReviewId?: string;
-  interviewMode?: boolean;
+  activeQuadrant: string;
+  onQuadrantSelect: (quadrant: string) => void;
   onReviewClick: (reviewId: string) => void;
 };
 
@@ -24,129 +24,108 @@ type ScatterPoint = [
   topic: string,
   summary: string,
 ];
-type RendererClickEvent = { offsetX?: number; offsetY?: number; zrX?: number; zrY?: number };
+
+type Quadrant = {
+  id: string;
+  name: string;
+  judgement: string;
+  action: string;
+  actions: string[];
+  filter: (review: Review) => boolean;
+};
+
+const scatterSampleLimit = 1200;
+const thresholdHours = 10;
+const quadrants: Quadrant[] = [
+  {
+    id: "early-risk",
+    name: "早期流失风险",
+    judgement: "性能、引导或购买预期问题",
+    action: "排查首小时体验",
+    actions: ["核验首小时体验与配置门槛", "准备安装、性能或引导 FAQ"],
+    filter: (review) => review.playtimeHours < thresholdHours && isNegative(review),
+  },
+  {
+    id: "deep-feedback",
+    name: "深度反馈用户",
+    judgement: "系统性或后期体验问题",
+    action: "进入高优先级反馈池",
+    actions: ["进入高优先级反馈处理清单", "提交策划或技术复核"],
+    filter: (review) => review.playtimeHours >= thresholdHours && isNegative(review),
+  },
+  {
+    id: "early-positive",
+    name: "初期印象良好",
+    judgement: "尚未形成深度口碑",
+    action: "推动继续体验和内容触达",
+    actions: ["推动继续体验内容触达", "沉淀新手阶段正向素材"],
+    filter: (review) => review.playtimeHours < thresholdHours && !isNegative(review),
+  },
+  {
+    id: "core-advocates",
+    name: "核心口碑用户",
+    judgement: "高价值传播人群",
+    action: "UGC、攻略和社区激励",
+    actions: ["筛选 UGC 与攻略素材", "邀请深度玩家参与社区内容"],
+    filter: (review) => review.playtimeHours >= thresholdHours && !isNegative(review),
+  },
+];
 
 const topicColors: Record<string, string> = {
-  "性能优化": "#38bdf8",
-  "战斗体验": "#f97316",
-  "剧情文化": "#a78bfa",
-  "美术音乐": "#34d399",
-  "价格购买": "#facc15",
-  "内容期待": "#fb7185",
-  "其他反馈": "#94a3b8",
+  性能优化: "#38bdf8",
+  战斗体验: "#f97316",
+  剧情文化: "#a78bfa",
+  美术音乐: "#34d399",
+  价格购买: "#facc15",
+  内容期待: "#fb7185",
+  其他反馈: "#94a3b8",
 };
-const scatterSampleLimit = 1500;
 
 export function PlaytimeSentimentScatter({
   reviews,
   selectedReviewId,
-  interviewMode = false,
+  activeQuadrant,
+  onQuadrantSelect,
   onReviewClick,
 }: PlaytimeSentimentScatterProps) {
-  const chartContainerRef = useRef<HTMLDivElement>(null);
-  const sampledReviews = useMemo(
-    () => sampleReviews(reviews, scatterSampleLimit, selectedReviewId),
-    [reviews, selectedReviewId],
-  );
-  const scatterPoints: ScatterPoint[] = useMemo(
-    () =>
-      sampledReviews.map((review): ScatterPoint => [
-        review.playtimeHours,
-        review.sentimentScore,
-        review.attentionScore,
-        review.id,
-        review.userSegment,
-        review.recommendation,
-        review.sentimentText,
-        review.topic,
-        summarize(review.content),
-      ]),
-    [sampledReviews],
-  );
-  const topics = useMemo(
-    () => Array.from(new Set(sampledReviews.map((review) => review.topic))).sort(),
-    [sampledReviews],
-  );
+  const sampledReviews = useMemo(() => sampleReviews(reviews, scatterSampleLimit, selectedReviewId), [
+    reviews,
+    selectedReviewId,
+  ]);
+  const scatterPoints: ScatterPoint[] = sampledReviews.map((review) => [
+    review.playtimeHours,
+    review.sentimentScore,
+    review.attentionScore,
+    review.id,
+    review.userSegmentGroup,
+    review.recommendationGroup,
+    review.sentimentText,
+    review.topic,
+    summarize(review.content),
+  ]);
+  const topics = Array.from(new Set(sampledReviews.map((review) => review.topic))).sort();
   const series = topics.map((topic) => ({
     name: topic,
     type: "scatter",
-    data: sampledReviews
-      .filter((review) => review.topic === topic)
-      .map((review): ScatterPoint => scatterPoints.find((point) => point[3] === review.id)!),
-    symbolSize: (value: ScatterPoint) => {
-      const normalizedAttention = Math.max(0, value[2]);
-      return Math.min(34, Math.max(7, Math.sqrt(normalizedAttention) * 2.2));
-    },
+    data: scatterPoints.filter((point) => point[7] === topic),
+    symbolSize: (value: ScatterPoint) => Math.min(30, Math.max(7, Math.sqrt(Math.max(0, value[2])) * 2.1)),
     itemStyle: {
       color: topicColors[topic] ?? "#67e8f9",
       opacity: 0.72,
       borderColor: "#e0f2fe",
       borderWidth: 1,
     },
-    emphasis: {
-      focus: "series",
-      itemStyle: { opacity: 1, borderWidth: 2 },
-    },
-    markLine: {
-      silent: true,
-      symbol: "none",
-      label: {
-        color: "#cbd5e1",
-        formatter: (params: { name: string }) => params.name,
-      },
-      lineStyle: { color: "rgba(125,211,252,0.45)", type: "dashed", width: 1 },
-      data: [
-        { name: "2h 尝鲜边界", xAxis: 2 },
-        { name: "10h 轻度/核心", xAxis: 10 },
-        { name: "50h 深度边界", xAxis: 50 },
-      ],
-    },
+    emphasis: { focus: "series", itemStyle: { opacity: 1, borderWidth: 2 } },
   }));
-  const handleChartReady = (chart: EChartsType) => {
-    const renderer = chart.getZr();
-    renderer.off("click");
-    renderer.on("click", (event: RendererClickEvent) => {
-      const x = event.offsetX ?? event.zrX ?? 0;
-      const y = event.offsetY ?? event.zrY ?? 0;
-      const [playtimeHours, sentimentScore] = chart.convertFromPixel(
-        { xAxisIndex: 0, yAxisIndex: 0 },
-        [x, y],
-      ) as number[];
-      const nearestPoint = findNearestPoint(scatterPoints, playtimeHours, sentimentScore);
-
-      if (nearestPoint) {
-        onReviewClick(nearestPoint[3]);
-      }
-    });
-  };
-  const handleContainerClick = (event: MouseEvent | PointerEvent | React.MouseEvent<HTMLDivElement>) => {
-    const box = chartContainerRef.current?.getBoundingClientRect();
-
-    if (!box || !scatterPoints.length) {
-      return;
-    }
-
-    const playtimeHours = Math.min(60, Math.max(0, ((event.clientX - box.left) / box.width) * 60));
-    const sentimentScore = 1 - Math.min(2, Math.max(0, ((event.clientY - box.top) / box.height) * 2));
-    const nearestPoint = findNearestPoint(scatterPoints, playtimeHours, sentimentScore);
-
-    if (nearestPoint) {
-      onReviewClick(nearestPoint[3]);
-    }
-  };
-  useEffect(() => {
-    const container = chartContainerRef.current;
-
-    if (!container) {
-      return;
-    }
-
-    container.addEventListener("click", handleContainerClick, true);
-    container.addEventListener("pointerdown", handleContainerClick, true);
-
-    return () => {
-      container.removeEventListener("click", handleContainerClick, true);
-      container.removeEventListener("pointerdown", handleContainerClick, true);
+  const quadrantStats = quadrants.map((quadrant) => {
+    const quadrantReviews = reviews.filter(quadrant.filter);
+    const recommended = quadrantReviews.filter((review) => review.recommendationGroup === "推荐").length;
+    return {
+      ...quadrant,
+      reviews: quadrantReviews,
+      recommendRate: quadrantReviews.length ? (recommended / quadrantReviews.length) * 100 : 0,
+      topTopics: topEntries(countBy(quadrantReviews, (review) => review.topic), 3).map(([topic]) => topic),
+      examples: quadrantReviews.slice(0, 3),
     };
   });
 
@@ -164,7 +143,6 @@ export function PlaytimeSentimentScatter({
       formatter: (params: { data: ScatterPoint }) => {
         const [playtimeHours, sentimentScore, attentionScore, , userSegment, recommendation, sentiment, topic, summary] =
           params.data;
-
         return [
           `<strong>${topic}</strong>`,
           `用户分层：${userSegment}`,
@@ -203,71 +181,122 @@ export function PlaytimeSentimentScatter({
       splitLine: { lineStyle: { color: "rgba(148,163,184,0.14)" } },
     },
     series,
-    graphic: selectedReviewId && !interviewMode
-      ? [
-          {
-            type: "text",
-            right: 20,
-            bottom: 8,
-            style: {
-              text: "已选中评论",
-              fill: "#67e8f9",
-              font: "12px sans-serif",
-            },
-          },
-        ]
-      : [],
+    graphic: [
+      rectGraphic("早期流失风险", 58, 188, "rgba(244,63,94,0.08)"),
+      rectGraphic("深度反馈用户", 382, 188, "rgba(251,113,133,0.08)"),
+      rectGraphic("初期印象良好", 58, 56, "rgba(34,197,94,0.08)"),
+      rectGraphic("核心口碑用户", 382, 56, "rgba(16,185,129,0.08)"),
+      {
+        type: "line",
+        shape: { x1: 374, y1: 54, x2: 374, y2: 316 },
+        style: { stroke: "rgba(125,211,252,0.55)", lineDash: [6, 6], lineWidth: 1 },
+      },
+      {
+        type: "line",
+        shape: { x1: 48, y1: 186, x2: 740, y2: 186 },
+        style: { stroke: "rgba(125,211,252,0.55)", lineDash: [6, 6], lineWidth: 1 },
+      },
+    ],
   };
 
   return (
-    <div
-      ref={chartContainerRef}
-      className={interviewMode ? "relative rounded border border-amber-300/30 p-2 shadow-[0_0_32px_rgba(251,191,36,0.14)]" : "relative"}
-      title={interviewMode ? "散点图：用游戏时长和情绪分定位不同用户层的口碑风险" : undefined}
-    >
-      {interviewMode ? (
-        <p className="mb-2 rounded border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-sm text-amber-100">
-          {"面试讲解：这张图把“玩了多久”和“态度如何”放在一起，用来识别低时长劝退和深度玩家负面反馈。"}
-        </p>
-      ) : null}
-      <DataSourceBadge sourceType="real" className="absolute right-3 top-2 z-10" />
-      <ReactECharts
-        option={option}
-        style={{ height: 360 }}
-        notMerge
-        lazyUpdate
-        onChartReady={handleChartReady}
-        onEvents={{
-          click: (params: { data?: ScatterPoint }) => {
-            const reviewId = params.data?.[3];
+    <div className="space-y-4">
+      <div className="relative">
+        <DataSourceBadge sourceType="real" className="absolute right-3 top-2 z-10" />
+        <ReactECharts
+          option={option}
+          style={{ height: 360 }}
+          notMerge
+          lazyUpdate
+          onEvents={{
+            click: (params: { data?: ScatterPoint }) => {
+              const reviewId = params.data?.[3];
+              if (reviewId) {
+                onReviewClick(reviewId);
+              }
+            },
+          }}
+        />
+      </div>
 
-            if (reviewId) {
-              onReviewClick(reviewId);
-            }
-          },
-        }}
-      />
+      <div className="grid gap-3 xl:grid-cols-4">
+        {quadrantStats.map((quadrant) => (
+          <button
+            key={quadrant.id}
+            type="button"
+            onClick={() => onQuadrantSelect(activeQuadrant === quadrant.id ? "全部" : quadrant.id)}
+            className={`rounded border p-3 text-left transition ${
+              activeQuadrant === quadrant.id
+                ? "border-cyan-300/55 bg-cyan-300/10"
+                : "border-slate-800 bg-slate-950/45 hover:border-cyan-300/35"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold text-white">{quadrant.name}</h3>
+              <span className="text-xs text-slate-400">{formatNumber(quadrant.reviews.length)} 条</span>
+            </div>
+            <p className="mt-2 text-xs leading-5 text-slate-400">{quadrant.judgement}</p>
+            <p className="mt-1 text-xs leading-5 text-cyan-100">{quadrant.action}</p>
+            <div className="mt-3 grid gap-2 text-xs">
+              <span className="text-slate-300">{`推荐率：${quadrant.reviews.length ? `${quadrant.recommendRate.toFixed(1)}%` : "暂无可计算数据"}`}</span>
+              <span className="text-slate-300">{`Top 主题：${quadrant.topTopics.join(" / ") || "暂无可计算数据"}`}</span>
+              <span className="text-cyan-100">{`建议动作：${quadrant.actions.join("；")}`}</span>
+            </div>
+            <div className="mt-3 space-y-2">
+              {quadrant.examples.map((review) => (
+                <span
+                  key={review.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onReviewClick(review.id);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.stopPropagation();
+                      onReviewClick(review.id);
+                    }
+                  }}
+                  className="block line-clamp-2 rounded border border-slate-800 bg-slate-900/45 px-2 py-1 text-xs leading-5 text-slate-300 hover:border-cyan-300/40"
+                >
+                  {review.content}
+                </span>
+              ))}
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
 
-function findNearestPoint(points: ScatterPoint[], playtimeHours: number, sentimentScore: number): ScatterPoint | undefined {
-  return points
-    .map((point) => ({
-      point,
-      distance: Math.abs(point[0] - playtimeHours) / 60 + Math.abs(point[1] - sentimentScore),
-    }))
-    .sort((pointA, pointB) => pointA.distance - pointB.distance)[0]?.point;
+function rectGraphic(text: string, x: number, y: number, fill: string) {
+  return {
+    type: "group",
+    children: [
+      {
+        type: "rect",
+        shape: { x, y, width: 300, height: 118 },
+        style: { fill, stroke: "rgba(148,163,184,0.12)" },
+      },
+      {
+        type: "text",
+        left: x + 12,
+        top: y + 10,
+        style: { text, fill: "#cbd5e1", font: "12px sans-serif" },
+      },
+    ],
+  };
+}
+
+function isNegative(review: Review): boolean {
+  return review.recommendationGroup === "不推荐" || review.sentimentText === "负向" || review.sentimentScore < 0;
 }
 
 function summarize(content: string): string {
   const trimmedContent = content.trim();
-
-  if (trimmedContent.length <= 64) {
-    return trimmedContent;
-  }
-
-  return `${trimmedContent.slice(0, 64)}...`;
+  return trimmedContent.length <= 64 ? trimmedContent : `${trimmedContent.slice(0, 64)}...`;
 }
 
 function sampleReviews(reviews: Review[], limit: number, selectedReviewId?: string): Review[] {
@@ -277,18 +306,33 @@ function sampleReviews(reviews: Review[], limit: number, selectedReviewId?: stri
 
   const sampledReviews: Review[] = [];
   const step = (reviews.length - 1) / (limit - 1);
-
   for (let index = 0; index < limit; index += 1) {
     sampledReviews.push(reviews[Math.round(index * step)]);
   }
 
   const selectedReview = selectedReviewId ? reviews.find((review) => review.id === selectedReviewId) : undefined;
-
   if (selectedReview && !sampledReviews.some((review) => review.id === selectedReview.id)) {
     sampledReviews[sampledReviews.length - 1] = selectedReview;
   }
 
   return sampledReviews;
+}
+
+function countBy<T, K>(items: T[], getKey: (item: T) => K): Map<K, number> {
+  const counts = new Map<K, number>();
+  items.forEach((item) => {
+    const key = getKey(item);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  });
+  return counts;
+}
+
+function topEntries<T>(counts: Map<T, number>, limit: number): Array<[T, number]> {
+  return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).slice(0, limit);
+}
+
+function formatNumber(value: number): string {
+  return value.toLocaleString("zh-CN");
 }
 
 function ChartEmptyState({ height }: { height: number }) {
@@ -297,7 +341,7 @@ function ChartEmptyState({ height }: { height: number }) {
       className="flex items-center justify-center rounded border border-slate-800 bg-slate-950/45 text-sm text-slate-500"
       style={{ height }}
     >
-      {"当前筛选条件下暂无真实评论散点数据"}
+      当前筛选条件下暂无真实评论散点数据
     </div>
   );
 }

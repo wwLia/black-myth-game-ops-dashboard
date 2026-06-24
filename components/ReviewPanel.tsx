@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { DataSourceBadge } from "@/components/DataSourceBadge";
 import type { Review } from "@/types/dashboard";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,7 @@ const urgencyClassName = "border-cyan-300/20 bg-cyan-300/10 text-cyan-100";
 const emptyStateText = "暂无评论数据";
 
 export function ReviewPanel({ reviews, selectedReviewId, onSelectedReviewChange }: ReviewPanelProps) {
+  const [expandedReviewIds, setExpandedReviewIds] = useState<Set<string>>(new Set());
   const selectedReview = useMemo(
     () => reviews.find((review) => review.id === selectedReviewId) ?? reviews[0],
     [reviews, selectedReviewId],
@@ -38,17 +39,31 @@ export function ReviewPanel({ reviews, selectedReviewId, onSelectedReviewChange 
   return (
     <div className="relative grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
       <DataSourceBadge sourceType="real" className="absolute right-3 top-3 z-20" />
-      <div className="max-h-[420px] overflow-y-auto rounded border border-slate-700/70">
+      <div className="max-h-[460px] overflow-y-auto rounded border border-slate-700/70">
         <div className="sticky top-0 z-10 border-b border-slate-700/70 bg-slate-900/95 px-4 py-3 pr-56 text-xs font-medium text-slate-400 backdrop-blur">
           {"阿里云天池 Steam 评论"} · {reviews.length} {"条"}
         </div>
 
         <div className="space-y-3 bg-slate-950/35 p-3">
-          {reviews.map((review, index) => (
+          {reviews.slice(0, 30).map((review, index) => {
+            const isExpanded = expandedReviewIds.has(review.id);
+
+            return (
             <button
               key={review.id}
               type="button"
-              onClick={() => onSelectedReviewChange(review.id)}
+              onClick={() => {
+                onSelectedReviewChange(review.id);
+                setExpandedReviewIds((currentIds) => {
+                  const nextIds = new Set(currentIds);
+                  if (nextIds.has(review.id)) {
+                    nextIds.delete(review.id);
+                  } else {
+                    nextIds.add(review.id);
+                  }
+                  return nextIds;
+                });
+              }}
               className={cn(
                 "block w-full rounded-lg border border-slate-800 bg-slate-950/60 p-4 text-left text-sm text-slate-300 transition hover:border-cyan-300/40 hover:bg-cyan-300/5",
                 selectedReview?.id === review.id && "border-cyan-300/45 bg-cyan-300/10",
@@ -75,10 +90,11 @@ export function ReviewPanel({ reviews, selectedReviewId, onSelectedReviewChange 
                 <span className="text-xs text-cyan-100">{review.topic}</span>
               </div>
 
-              <p className="mt-3 line-clamp-3 leading-6 text-slate-300">{review.content}</p>
+              <p className={cn("mt-3 leading-6 text-slate-300", !isExpanded && "line-clamp-3")}>{review.content}</p>
               <p className="mt-3 line-clamp-2 text-xs leading-5 text-slate-500">{review.suggestedAction}</p>
             </button>
-          ))}
+          );
+          })}
         </div>
       </div>
 
@@ -91,7 +107,7 @@ export function ReviewPanel({ reviews, selectedReviewId, onSelectedReviewChange 
 
 function ReviewDetail({ review, authorLabel }: { review: Review; authorLabel: string }) {
   return (
-    <aside className="max-h-[420px] overflow-y-auto rounded border border-cyan-300/20 bg-slate-950/60 p-4 text-sm text-slate-300 shadow-[0_0_28px_rgba(14,165,233,0.08)]">
+    <aside className="max-h-[460px] overflow-y-auto rounded border border-cyan-300/20 bg-slate-950/60 p-4 text-sm text-slate-300 shadow-[0_0_28px_rgba(14,165,233,0.08)]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs text-slate-500">{"完整评论"}</p>
@@ -114,7 +130,7 @@ function ReviewDetail({ review, authorLabel }: { review: Review; authorLabel: st
 
       <section className="mt-5">
         <h4 className="text-xs font-medium text-slate-400">{"评论内容"}</h4>
-        <p className="mt-2 line-clamp-3 whitespace-pre-wrap leading-6 text-slate-200">{review.content}</p>
+        <p className="mt-2 whitespace-pre-wrap leading-6 text-slate-200">{review.content}</p>
       </section>
 
       <section className="mt-5 border-t border-slate-800 pt-4">

@@ -7,12 +7,12 @@ export type FilterBarProps = {
   filters: DashboardFilters;
   interviewMode: boolean;
   options: {
-    platforms: string[];
     recommendations: string[];
     sentiments: string[];
     topics: string[];
     userSegments: string[];
     urgencies: string[];
+    dateRanges: string[];
   };
   onFiltersChange: (filters: DashboardFilters) => void;
   onResetFilters: () => void;
@@ -73,12 +73,6 @@ export function FilterBar({
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <SelectField
-          label="平台"
-          options={options.platforms}
-          value={filters.platform}
-          onChange={(value) => updateFilter("platform", value)}
-        />
-        <SelectField
           label="是否推荐"
           options={options.recommendations}
           value={filters.recommendation}
@@ -108,10 +102,19 @@ export function FilterBar({
           value={filters.urgency}
           onChange={(value) => updateFilter("urgency", value)}
         />
+        {hasUsableDates(options.dateRanges) ? (
+          <SelectField
+            label="发布日期"
+            options={options.dateRanges}
+            value={filters.dateRange}
+            onChange={(value) => updateFilter("dateRange", value)}
+          />
+        ) : null}
       </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-3 text-xs text-slate-400">
         <DataSourceBadge sourceType="real" />
+        <span>{"数据平台：Steam；未来可扩展其他平台，当前不生成跨平台结论。"}</span>
       </div>
     </section>
   );
@@ -143,4 +146,8 @@ function SelectField({ label, options, value, onChange }: SelectFieldProps) {
       </select>
     </label>
   );
+}
+
+function hasUsableDates(dateRanges: string[]): boolean {
+  return dateRanges.some((dateRange) => dateRange !== "全部" && /^\d{4}-\d{2}-\d{2}/.test(dateRange));
 }

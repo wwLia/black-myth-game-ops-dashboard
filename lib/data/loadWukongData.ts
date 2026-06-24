@@ -428,15 +428,12 @@ function buildFilters(reviews: WukongReview[], aggregates: DashboardAggregates |
       user_segment: "\u5168\u90e8",
       urgency: "\u5168\u90e8",
       dateRange: "\u5168\u90e8",
+      quadrant: "\u5168\u90e8",
     },
   };
 }
 
 function normalizePlatform(platform: string): Platform {
-  if (platform === "PS5" || platform === "Xbox" || platform === "WeGame") {
-    return platform;
-  }
-
   return "Steam";
 }
 

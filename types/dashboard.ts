@@ -1,7 +1,7 @@
-export type Platform = "Steam" | "PS5" | "Xbox" | "WeGame";
+export type Platform = "Steam";
 
 export type Sentiment = "positive" | "neutral" | "negative";
-export type SourceType = "real" | "mock";
+export type SourceType = "real" | "derived" | "mock" | "future";
 
 export type KpiMetric = {
   id: string;
@@ -220,6 +220,7 @@ export type DashboardFilters = {
   user_segment: string;
   urgency: string;
   dateRange: string;
+  quadrant: string;
 };
 
 export type DashboardViewData = {
