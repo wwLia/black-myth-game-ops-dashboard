@@ -35,11 +35,23 @@ type DashboardPanelProps = {
   children: ReactNode;
 };
 
-type SummaryItem = {
-  fact: string;
-  judgement: string;
-  action: string;
-  owner: string;
+type ExecutiveSummaryItem = {
+  id: string;
+  index: number;
+  category: string;
+  finding: {
+    fact: string;
+    judgment: string;
+    validationFocus: string;
+    businessImpact?: string;
+  };
+  action: {
+    linkedFinding: string;
+    owners: string[];
+    execution: string;
+    expectedOutput: string;
+    status?: string;
+  };
 };
 
 const ALL = "全部";
@@ -71,7 +83,7 @@ export function DashboardClient({ dashboardData }: DashboardClientProps) {
   const kpiMetrics = useMemo(() => buildDecisionKpis(filteredReviews), [filteredReviews]);
   const playtimeDistribution = useMemo(() => buildFilteredPlaytimeDistribution(filteredReviews), [filteredReviews]);
   const topicDistribution = useMemo(() => buildFilteredTopicDistribution(filteredReviews), [filteredReviews]);
-  const summary = useMemo(() => buildExecutiveSummary(filteredReviews), [filteredReviews]);
+  const executiveSummaryItems = useMemo(() => buildExecutiveSummaryItems(filteredReviews), [filteredReviews]);
   const feedbackItems = useMemo(() => buildFeedbackItems(filteredReviews, statuses), [filteredReviews, statuses]);
   const publishingActions = useMemo(() => buildPublishingActions(filteredReviews, feedbackItems), [
     feedbackItems,
@@ -100,7 +112,7 @@ export function DashboardClient({ dashboardData }: DashboardClientProps) {
 
       <KpiCards metrics={kpiMetrics} />
 
-      <ExecutiveSummary reviews={filteredReviews} findings={summary.findings} actions={summary.actions} />
+      <ExecutiveSummary reviews={filteredReviews} items={executiveSummaryItems} />
 
       <DashboardPanel title="问题定位" subtitle="所有图表读取当前统一筛选后的 Steam 评论样本。" sourceType="real">
         <div className="space-y-4">
@@ -256,13 +268,16 @@ function DashboardPanel({ title, subtitle, sourceType = "real", children }: Dash
 
 function ExecutiveSummary({
   reviews,
-  findings,
-  actions,
+  items,
 }: {
   reviews: Review[];
-  findings: SummaryItem[];
-  actions: SummaryItem[];
+  items: ExecutiveSummaryItem[];
 }) {
+  const sampleNote =
+    reviews.length < 20
+      ? "当前筛选样本较少，结论仅供参考。"
+      : `当前筛选范围包含 ${formatNumber(reviews.length)} 条评论，可用于方向性观察；结论仍需结合典型评论和其他业务数据验证。`;
+
   return (
     <section className="rounded-lg border border-cyan-300/15 bg-slate-950/60 p-4 shadow-[0_0_28px_rgba(14,165,233,0.08)]">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -273,50 +288,90 @@ function ExecutiveSummary({
           </div>
           <p className="mt-1 text-xs text-slate-400">基于当前筛选后的评论样本动态计算，不使用 Mock 数据。</p>
         </div>
-        {reviews.length < 20 ? (
-          <span className="rounded border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-xs text-amber-100">
-            当前筛选样本较少，结论仅供参考。
-          </span>
-        ) : null}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <SummaryColumn title="3 个核心发现" items={findings} />
-        <SummaryColumn title="3 个建议动作" items={actions} />
-      </div>
+      <p className="mb-4 rounded border border-slate-800 bg-slate-950/45 px-3 py-2 text-xs leading-5 text-slate-300">
+        {sampleNote}
+      </p>
+
+      {items.length ? (
+        <div className="space-y-3">
+          <div className="hidden gap-4 xl:grid xl:grid-cols-2">
+            <h3 className="rounded border border-slate-800 bg-slate-950/45 px-3 py-2 text-sm font-semibold text-cyan-100">
+              3 个核心发现
+            </h3>
+            <h3 className="rounded border border-slate-800 bg-slate-950/45 px-3 py-2 text-sm font-semibold text-cyan-100">
+              3 个对应行动
+            </h3>
+          </div>
+          <div className="grid gap-4">
+            {items.map((item) => (
+              <ExecutiveSummaryPair key={item.id} item={item} />
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="rounded border border-slate-800 bg-slate-950/45 px-4 py-8 text-center text-sm text-slate-500">
+          当前筛选条件下暂无足够数据生成管理层摘要。
+        </div>
+      )}
     </section>
   );
 }
 
-function SummaryColumn({ title, items }: { title: string; items: SummaryItem[] }) {
+function ExecutiveSummaryPair({ item }: { item: ExecutiveSummaryItem }) {
   return (
-    <div className="rounded border border-slate-800 bg-slate-950/45 p-3">
-      <h3 className="text-sm font-semibold text-cyan-100">{title}</h3>
-      <div className="mt-3 grid gap-3">
-        {items.map((item, index) => (
-          <article key={`${title}-${index}`} className="rounded border border-slate-800 bg-slate-900/35 p-3 text-sm">
-            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs text-slate-500">{`#${index + 1}`}</span>
-              <span className="rounded border border-cyan-300/20 bg-cyan-300/10 px-2 py-1 text-xs text-cyan-100">
-                {item.owner}
-              </span>
-            </div>
-            <p className="leading-6 text-slate-300">
-              <span className="text-slate-100">事实：</span>
-              {item.fact}
-            </p>
-            <p className="mt-1 leading-6 text-slate-300">
-              <span className="text-slate-100">判断：</span>
-              {item.judgement}
-            </p>
-            <p className="mt-1 leading-6 text-cyan-100">
-              <span className="text-slate-100">动作：</span>
-              {item.action}
-            </p>
-          </article>
-        ))}
+    <div className="grid gap-3 xl:grid-cols-2 xl:items-stretch">
+      <div className="xl:hidden rounded border border-slate-800 bg-slate-950/45 px-3 py-2 text-sm font-semibold text-cyan-100">
+        {`核心发现 #${item.index}`}
       </div>
+      <article className="rounded border border-slate-800 bg-slate-900/35 p-3 text-sm">
+        <SummaryCardHeader index={item.index} category={item.category} />
+        <SummaryLine label="事实" value={item.finding.fact} />
+        <SummaryLine label="判断" value={item.finding.judgment} />
+        <SummaryLine label="验证重点" value={item.finding.validationFocus} tone="cyan" />
+        {item.finding.businessImpact ? <SummaryLine label="业务影响" value={item.finding.businessImpact} /> : null}
+      </article>
+
+      <div className="xl:hidden rounded border border-slate-800 bg-slate-950/45 px-3 py-2 text-sm font-semibold text-cyan-100">
+        {`对应行动 #${item.index}`}
+      </div>
+      <article className="rounded border border-slate-800 bg-slate-900/35 p-3 text-sm">
+        <SummaryCardHeader index={item.index} category={item.category} />
+        <SummaryLine label="对应发现" value={`对应核心发现 #${item.index}：${item.action.linkedFinding}`} />
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="text-slate-100">建议负责人：</span>
+          {item.action.owners.map((owner) => (
+            <span key={owner} className="rounded border border-cyan-300/20 bg-cyan-300/10 px-2 py-1 text-xs text-cyan-100">
+              {owner}
+            </span>
+          ))}
+        </div>
+        <SummaryLine label="执行动作" value={item.action.execution} tone="cyan" />
+        <SummaryLine label="预期产出" value={item.action.expectedOutput} />
+        <SummaryLine label="当前状态" value={item.action.status ?? "待验证"} />
+      </article>
     </div>
+  );
+}
+
+function SummaryCardHeader({ index, category }: { index: number; category: string }) {
+  return (
+    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+      <span className="rounded border border-cyan-300/20 bg-cyan-300/10 px-2 py-1 text-xs text-cyan-100">
+        {`#${index}`}
+      </span>
+      <span className="rounded border border-white/10 bg-white/5 px-2 py-1 text-xs text-slate-300">{category}</span>
+    </div>
+  );
+}
+
+function SummaryLine({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "cyan" }) {
+  return (
+    <p className={`mt-1 leading-6 ${tone === "cyan" ? "text-cyan-100" : "text-slate-300"}`}>
+      <span className="text-slate-100">{`${label}：`}</span>
+      {value}
+    </p>
   );
 }
 
@@ -597,57 +652,102 @@ function buildDecisionKpis(reviews: Review[]): KpiMetric[] {
   ];
 }
 
-function buildExecutiveSummary(reviews: Review[]) {
+function buildExecutiveSummaryItems(reviews: Review[]): ExecutiveSummaryItem[] {
+  if (!reviews.length) {
+    return [];
+  }
+
   const negativeReviews = reviews.filter(isNegativeReview);
   const positiveReviews = reviews.filter((review) => review.recommendationGroup === "推荐" || review.sentimentText === "正向");
   const topNegativeTopic = getTopTopic(negativeReviews) ?? "暂无明显负面主题";
   const topPositiveTopic = getTopTopic(positiveReviews) ?? "暂无明显正向主题";
   const deepNegativeCount = negativeReviews.filter((review) => review.playtimeHours >= highPlaytimeThreshold).length;
   const earlyNegativeCount = negativeReviews.length - deepNegativeCount;
-  const topOwner = inferOwner(topNegativeTopic);
+  const topNegativeOwners = inferOwnersForSummary(topNegativeTopic, ["运营", "社区"]);
+  const topNegativeIsOther = isOtherFeedbackTopic(topNegativeTopic);
+  const lowPlaytimeNegativeMore = earlyNegativeCount > deepNegativeCount;
+  const playtimeComparisonText =
+    earlyNegativeCount === deepNegativeCount
+      ? "两类样本数量接近"
+      : lowPlaytimeNegativeMore
+        ? "低时长负向样本相对更多"
+        : "高时长负向样本相对更多";
+  const playtimeSummary = buildPlaytimeNegativeSummary(deepNegativeCount, earlyNegativeCount);
+  const playtimeRiskCategory = getPlaytimeRiskCategory(deepNegativeCount, earlyNegativeCount);
+  const topPositiveIsOther = isOtherFeedbackTopic(topPositiveTopic);
 
-  return {
-    findings: [
-      {
-        fact: `当前筛选样本中，不推荐或负向评论最多集中在“${topNegativeTopic}”。`,
-        judgement: "该主题更适合先进入问题定位，而不是直接形成公开业务结论。",
-        action: "将该主题加入反馈处理清单，核验典型评论与相关样本。",
-        owner: topOwner,
+  return [
+    {
+      id: "top-negative-topic",
+      index: 1,
+      category: "负面主题",
+      finding: {
+        fact: negativeReviews.length
+          ? `当前筛选样本中，不推荐或负向评论最多集中在“${topNegativeTopic}”。`
+          : "当前筛选范围内暂无明显不推荐或负向评论主题。",
+        judgment: topNegativeIsOther
+          ? "“其他反馈”不能直接解释为已确认问题，需要继续拆分典型评论并人工复核是否存在重复模式。"
+          : "该主题更适合先进入问题定位和证据复核，暂不直接形成确定性产品结论。",
+        validationFocus: topNegativeIsOther
+          ? "优先核验典型评论，识别是否存在可归并的重复问题、具体体验环节或配置场景。"
+          : `优先核查“${topNegativeTopic}”下的典型评论、相关样本数量和受影响玩家类型。`,
+        businessImpact: "若该主题持续集中，可能影响社区沟通优先级和后续处理排期。",
       },
-      {
-        fact: `高时长负向样本 ${formatNumber(deepNegativeCount)} 条，低时长负向样本 ${formatNumber(earlyNegativeCount)} 条。`,
-        judgement: deepNegativeCount >= earlyNegativeCount ? "当前更偏向深度体验后的系统性意见。" : "当前更偏向早期体验或购买预期落差。",
-        action: deepNegativeCount >= earlyNegativeCount ? "优先复核中后期体验和系统反馈。" : "优先排查首小时体验、配置和引导说明。",
-        owner: deepNegativeCount >= earlyNegativeCount ? "策划" : "技术",
+      action: {
+        linkedFinding: topNegativeIsOther ? "负面反馈集中在待拆分主题" : `负面反馈集中在“${topNegativeTopic}”`,
+        owners: topNegativeOwners,
+        execution: topNegativeIsOther
+          ? "抽样核验典型评论，拆分可重复问题主题，并标记是否需要进入反馈处理清单。"
+          : `围绕“${topNegativeTopic}”核验证据样本，判断是否需要由${topNegativeOwners.join("、")}进入后续处理。`,
+        expectedOutput: "形成主题核验记录，包含典型评论、问题归类、证据样本、建议负责人和下一步动作。",
+        status: "待验证",
       },
-      {
-        fact: `正向评论中较突出的主题为“${topPositiveTopic}”。`,
-        judgement: "该主题可作为传播素材候选，但仍需要人工复核语境。",
-        action: "沉淀典型评论，用于社区内容、KOL 脚本或媒体 Brief 的素材池。",
-        owner: "发行",
+    },
+    {
+      id: "playtime-negative-split",
+      index: 2,
+      category: playtimeRiskCategory,
+      finding: {
+        fact: `当前高时长负向样本 ${formatNumber(deepNegativeCount)} 条，低时长负向样本 ${formatNumber(earlyNegativeCount)} 条，${playtimeComparisonText}。`,
+        judgment: playtimeSummary.findingJudgment,
+        validationFocus: playtimeSummary.validationFocus,
+        businessImpact: playtimeSummary.businessImpact,
       },
-    ],
-    actions: [
-      {
-        fact: `“${topNegativeTopic}”在负向样本中出现频率最高。`,
-        judgement: "需要先验证主题是否集中于同类体验问题。",
-        action: "建议验证并准备 FAQ 或说明草稿。",
-        owner: topOwner,
+      action: {
+        linkedFinding: playtimeSummary.linkedFinding,
+        owners: playtimeSummary.owners,
+        execution: playtimeSummary.execution,
+        expectedOutput: playtimeSummary.expectedOutput,
+        status: "待验证",
       },
-      {
-        fact: `当前筛选后共有 ${formatNumber(reviews.length)} 条评论样本。`,
-        judgement: reviews.length < 20 ? "样本较少，结论稳定性有限。" : "样本量可支持一次轻量运营判断。",
-        action: reviews.length < 20 ? "扩大筛选范围后再做对外表达。" : "将高影响问题分配给责任团队并追踪状态。",
-        owner: "运营",
+    },
+    {
+      id: "positive-content-opportunity",
+      index: 3,
+      category: "传播机会",
+      finding: {
+        fact: positiveReviews.length
+          ? `正向或推荐评论中较突出的主题为“${topPositiveTopic}”。`
+          : "当前筛选范围内暂无足够正向或推荐评论用于提炼传播主题。",
+        judgment: topPositiveIsOther
+          ? "“其他反馈”中的正向内容仍需人工拆分，不能直接沉淀为明确卖点。"
+          : "该主题可作为内容传播素材候选，但仍需要结合典型评论复核表达语境。",
+        validationFocus: topPositiveIsOther
+          ? "优先拆分正向典型评论，确认是否存在稳定的美术、音乐、战斗、文化或剧情表达。"
+          : `优先复核“${topPositiveTopic}”下的深度正向评论、可引用素材和适合传播的人群。`,
+        businessImpact: "稳定的正向主题可支持社区内容、KOL 视频、UGC 活动或媒体 Brief 选题。",
       },
-      {
-        fact: `正向主题“${topPositiveTopic}”可被提炼为传播素材。`,
-        judgement: "更适合做内容放大，不适合生成销量或 ROI 结论。",
-        action: "筛选高时长正向评论，制作攻略、UGC 或媒体 Brief 素材。",
-        owner: "社区",
+      action: {
+        linkedFinding: topPositiveIsOther ? "正向反馈仍需拆分为具体内容主题" : `正向主题“${topPositiveTopic}”具备传播素材候选价值`,
+        owners: ["发行", "社区"],
+        execution: topPositiveIsOther
+          ? "筛选正向典型评论，拆分可复用内容主题，并判断是否适合进入内容 Brief。"
+          : `围绕“${topPositiveTopic}”筛选高时长正向评论，整理 KOL、UGC、媒体和社区内容素材。`,
+        expectedOutput: "形成内容素材清单，包含主题卖点、典型评论、目标人群、推荐渠道和内容形式。",
+        status: "待验证",
       },
-    ],
-  };
+    },
+  ];
 }
 
 function buildFeedbackItems(reviews: Review[], statuses: Record<string, string>) {
@@ -904,6 +1004,79 @@ function inferAction(topic: string, owner: string): string {
   }
 
   return /攻略|机制|引导/.test(topic) ? "建议制作攻略或发布 FAQ" : "建议观察并准备社区解释";
+}
+
+function inferOwnersForSummary(topic: string, fallbackOwners: string[]): string[] {
+  if (isOtherFeedbackTopic(topic) || !topic || topic === "暂无明显负面主题") {
+    return fallbackOwners;
+  }
+
+  const owner = inferOwner(topic);
+  const owners = new Set<string>(["运营", owner]);
+
+  if (/FAQ|攻略|机制|引导|沟通/.test(topic)) {
+    owners.add("社区");
+  }
+
+  if (/安装|退款|重复咨询/.test(topic)) {
+    owners.add("客服");
+  }
+
+  return Array.from(owners);
+}
+
+function buildPlaytimeNegativeSummary(deepNegativeCount: number, earlyNegativeCount: number) {
+  if (earlyNegativeCount > deepNegativeCount) {
+    return {
+      findingJudgment:
+        "低时长负向反馈相对集中，说明当前风险更可能出现在早期体验，可能涉及性能、设备配置、首小时引导、操作理解或购买预期差异。",
+      validationFocus: "优先核查首小时体验、配置问题、新手引导和购买预期，不直接认定具体原因。",
+      businessImpact: "早期体验问题可能影响新玩家继续体验和社区初始口碑，需要先验证再制定说明或优化动作。",
+      linkedFinding: "低时长负向反馈相对集中",
+      owners: ["技术", "策划", "运营", "社区"],
+      execution:
+        "技术侧抽样核查卡顿、掉帧、崩溃和配置反馈；策划或运营侧区分引导、难度、操作理解和购买预期问题；社区侧根据验证结果准备配置说明、新手攻略或 FAQ。",
+      expectedOutput: "形成“首小时体验问题清单”，包含问题主题、证据样本、建议负责人、建议动作和处理状态。",
+    };
+  }
+
+  if (deepNegativeCount > earlyNegativeCount) {
+    return {
+      findingJudgment: "高时长负向反馈相对集中，说明当前风险更可能来自深度体验或后期系统性问题。",
+      validationFocus: "优先复核 Boss、地图、后期内容、机制理解和系统反馈，不直接认定具体原因。",
+      businessImpact: "深度玩家负向反馈可能影响核心口碑和长线社区讨论，需要沉淀证据后进入跨团队复核。",
+      linkedFinding: "高时长负向反馈相对集中",
+      owners: ["策划", "技术", "社区"],
+      execution:
+        "策划侧复核 Boss、地图、后期内容和机制理解反馈；技术侧核查深度体验中出现的性能或稳定性样本；社区侧准备机制解释、攻略或持续观察记录。",
+      expectedOutput: "形成“深度体验问题清单”，包含问题主题、证据样本、建议负责人、建议动作和处理状态。",
+    };
+  }
+
+  return {
+    findingJudgment: "高低时长负向样本数量接近，当前还不能判断风险主要来自早期体验还是深度体验。",
+    validationFocus: "同时抽样核查首小时体验和深度体验反馈，优先寻找重复出现的问题主题。",
+    businessImpact: "两类样本接近时，需要先提高证据颗粒度，避免过早把资源集中到单一体验阶段。",
+    linkedFinding: "高低时长负向反馈数量接近",
+    owners: ["运营", "策划", "技术", "社区"],
+    execution:
+      "运营侧拆分高低时长样本；策划与技术分别核查体验路径和稳定性反馈；社区侧整理需要解释或持续观察的问题。",
+    expectedOutput: "形成“分层负向反馈核验清单”，包含高低时长样本、问题主题、证据样本和建议动作。",
+  };
+}
+
+function getPlaytimeRiskCategory(deepNegativeCount: number, earlyNegativeCount: number): string {
+  const largerCount = Math.max(deepNegativeCount, earlyNegativeCount);
+
+  if (largerCount === 0 || Math.abs(deepNegativeCount - earlyNegativeCount) / largerCount <= 0.1) {
+    return "体验阶段待验证";
+  }
+
+  return earlyNegativeCount > deepNegativeCount ? "早期体验风险" : "深度体验风险";
+}
+
+function isOtherFeedbackTopic(topic: string): boolean {
+  return !topic || topic === "其他反馈" || topic.includes("其他");
 }
 
 function inferEvidence(count: number, total: number): string {
