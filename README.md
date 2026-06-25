@@ -160,3 +160,4 @@ Mock 数据均标记为 `source_type: "mock"`，页面中也会显示“Mock 数
 6. 扩展思路
 
    如果继续迭代，可以接入实时在线数据、行业新闻源、真实运营活动日历，并进一步加入自动摘要、版本复盘和反馈导出，让它从 Demo 变成可落地的游戏运营工作台。
+<!-- trigger V1 production deployment -->
