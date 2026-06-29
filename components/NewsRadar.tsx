@@ -12,9 +12,9 @@ export type NewsRadarProps = {
 };
 
 const sentimentClassName: Record<NewsSentiment, string> = {
-  positive: "border-emerald-300/25 bg-emerald-300/10 text-emerald-200",
-  neutral: "border-amber-300/25 bg-amber-300/10 text-amber-200",
-  negative: "border-rose-300/25 bg-rose-300/10 text-rose-200",
+  positive: "ops-tone-positive",
+  neutral: "ops-tone-neutral",
+  negative: "ops-tone-negative",
 };
 
 const sentimentLabel: Record<NewsSentiment, string> = {
@@ -32,7 +32,11 @@ export function NewsRadar({ metrics, news }: NewsRadarProps) {
   );
 
   const option = {
-    tooltip: {},
+    tooltip: {
+      backgroundColor: "rgba(2,6,23,0.96)",
+      borderColor: "rgba(168,85,247,0.36)",
+      textStyle: { color: "#e2e8f0" },
+    },
     legend: { bottom: 0, textStyle: { color: "#cbd5e1" } },
     radar: {
       radius: "64%",
@@ -65,7 +69,7 @@ export function NewsRadar({ metrics, news }: NewsRadarProps) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[0.86fr_1.14fr]">
-      <div className="relative rounded border border-slate-800 bg-slate-950/35">
+      <div className="ops-card-muted relative rounded">
         <ClientECharts option={option} style={{ width: "100%", height: 340 }} />
         <DataSourceBadge sourceType="mock" className="absolute right-3 top-3" />
         <span className="absolute right-3 top-12 text-xs text-slate-400">
@@ -74,7 +78,7 @@ export function NewsRadar({ metrics, news }: NewsRadarProps) {
       </div>
 
       <div className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded border border-slate-800 bg-slate-950/50 px-3 py-2 text-xs text-slate-400">
+        <div className="ops-card-muted flex flex-wrap items-center justify-between gap-2 rounded px-3 py-2 text-xs text-slate-400">
           <span>
             {activeKeyword
               ? `关键词筛选：${activeKeyword} / ${filteredNews.length} 条`
@@ -84,23 +88,23 @@ export function NewsRadar({ metrics, news }: NewsRadarProps) {
             <button
               type="button"
               onClick={() => setActiveKeyword(null)}
-              className="rounded border border-cyan-300/25 bg-cyan-300/10 px-2 py-1 text-cyan-100"
+              className="ops-focus-ring rounded border border-cyan-300/25 bg-cyan-300/10 px-2 py-1 text-cyan-100"
             >
               {"清除关键词"}
             </button>
           ) : null}
         </div>
 
-        <div className="max-h-[520px] space-y-3 overflow-y-auto">
+        <div className="ops-scrollbar max-h-[520px] space-y-3 overflow-y-auto">
           {filteredNews.map((item) => {
             const isExpanded = expandedNewsId === item.id;
 
             return (
-              <article key={item.id} className="rounded border border-slate-700/70 bg-slate-950/50 p-3">
+              <article key={item.id} className="ops-card rounded p-3">
                 <button
                   type="button"
                   onClick={() => setExpandedNewsId(isExpanded ? null : item.id)}
-                  className="block w-full text-left"
+                  className="ops-focus-ring block w-full text-left"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -109,7 +113,7 @@ export function NewsRadar({ metrics, news }: NewsRadarProps) {
                         {item.source} · {item.published_at} · {item.category}
                       </p>
                     </div>
-                    <span className={cn("shrink-0 rounded border px-2 py-1 text-xs", sentimentClassName[item.sentiment])}>
+                    <span className={cn("ops-badge shrink-0 rounded border px-2 py-1 text-xs", sentimentClassName[item.sentiment])}>
                       {sentimentLabel[item.sentiment]}
                     </span>
                   </div>
@@ -122,7 +126,7 @@ export function NewsRadar({ metrics, news }: NewsRadarProps) {
                       type="button"
                       onClick={() => setActiveKeyword(keyword)}
                       className={cn(
-                        "rounded border px-2 py-1 text-xs transition",
+                        "ops-focus-ring rounded border px-2 py-1 text-xs transition",
                         activeKeyword === keyword
                           ? "border-cyan-300/45 bg-cyan-300/15 text-cyan-100"
                           : "border-white/10 bg-white/5 text-slate-400 hover:border-cyan-300/35 hover:text-cyan-100",

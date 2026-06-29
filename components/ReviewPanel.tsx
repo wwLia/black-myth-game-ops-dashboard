@@ -12,12 +12,11 @@ export type ReviewPanelProps = {
 };
 
 const sentimentClassName: Record<Review["sentiment"], string> = {
-  positive: "border-emerald-300/25 bg-emerald-300/10 text-emerald-200",
-  neutral: "border-amber-300/25 bg-amber-300/10 text-amber-200",
-  negative: "border-rose-300/25 bg-rose-300/10 text-rose-200",
+  positive: "ops-tone-positive",
+  neutral: "ops-tone-neutral",
+  negative: "ops-tone-negative",
 };
 
-const urgencyClassName = "border-cyan-300/20 bg-cyan-300/10 text-cyan-100";
 const emptyStateText = "暂无评论数据";
 
 export function ReviewPanel({ reviews, selectedReviewId, onSelectedReviewChange }: ReviewPanelProps) {
@@ -30,7 +29,7 @@ export function ReviewPanel({ reviews, selectedReviewId, onSelectedReviewChange 
 
   if (!reviews.length) {
     return (
-      <div className="rounded border border-slate-700/70 bg-slate-950/45 px-4 py-8 text-center text-sm text-slate-400">
+      <div className="ops-card-muted rounded px-4 py-8 text-center text-sm text-slate-400">
         {emptyStateText}
       </div>
     );
@@ -39,12 +38,12 @@ export function ReviewPanel({ reviews, selectedReviewId, onSelectedReviewChange 
   return (
     <div className="relative grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
       <DataSourceBadge sourceType="real" className="absolute right-3 top-3 z-20" />
-      <div className="max-h-[460px] overflow-y-auto rounded border border-slate-700/70">
-        <div className="sticky top-0 z-10 border-b border-slate-700/70 bg-slate-900/95 px-4 py-3 pr-56 text-xs font-medium text-slate-400 backdrop-blur">
+      <div className="ops-scrollbar max-h-[460px] overflow-y-auto rounded border border-cyan-300/20">
+        <div className="sticky top-0 z-10 border-b border-cyan-300/15 bg-slate-900/95 px-4 py-3 pr-24 text-xs font-medium text-slate-400 backdrop-blur sm:pr-56">
           {"阿里云天池 Steam 评论"} · {reviews.length} {"条"}
         </div>
 
-        <div className="space-y-3 bg-slate-950/35 p-3">
+        <div className="ops-review-surface space-y-3 p-3">
           {reviews.slice(0, 30).map((review, index) => {
             const isExpanded = expandedReviewIds.has(review.id);
 
@@ -65,8 +64,9 @@ export function ReviewPanel({ reviews, selectedReviewId, onSelectedReviewChange 
                 });
               }}
               className={cn(
-                "block w-full rounded-lg border border-slate-800 bg-slate-950/60 p-4 text-left text-sm text-slate-300 transition hover:border-cyan-300/40 hover:bg-cyan-300/5",
+                "ops-focus-ring block w-full rounded-lg border border-slate-800 bg-slate-950/60 p-4 text-left text-sm text-slate-300 transition hover:border-cyan-300/40 hover:bg-cyan-300/5",
                 selectedReview?.id === review.id && "border-cyan-300/45 bg-cyan-300/10",
+                review.sentiment === "negative" && "hover:border-rose-300/50",
               )}
             >
               <div className="flex flex-wrap items-center gap-2">
@@ -78,13 +78,13 @@ export function ReviewPanel({ reviews, selectedReviewId, onSelectedReviewChange 
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className={cn("inline-flex rounded border px-2 py-1 text-xs", sentimentClassName[review.sentiment])}>
+                <span className={cn("ops-badge inline-flex rounded border px-2 py-1 text-xs", sentimentClassName[review.sentiment])}>
                   {review.sentimentText}
                 </span>
-                <span className="inline-flex rounded border border-white/10 bg-white/5 px-2 py-1 text-xs text-slate-200">
+                <span className={cn("ops-badge inline-flex rounded border px-2 py-1 text-xs", getRecommendationClassName(review.recommendation))}>
                   {review.recommendation}
                 </span>
-                <span className={cn("inline-flex rounded border px-2 py-1 text-xs", urgencyClassName)}>
+                <span className={cn("ops-badge inline-flex rounded border px-2 py-1 text-xs", getUrgencyClassName(review.urgency))}>
                   {review.urgency}
                 </span>
                 <span className="text-xs text-cyan-100">{review.topic}</span>
@@ -107,13 +107,13 @@ export function ReviewPanel({ reviews, selectedReviewId, onSelectedReviewChange 
 
 function ReviewDetail({ review, authorLabel }: { review: Review; authorLabel: string }) {
   return (
-    <aside className="max-h-[460px] overflow-y-auto rounded border border-cyan-300/20 bg-slate-950/60 p-4 text-sm text-slate-300 shadow-[0_0_28px_rgba(14,165,233,0.08)]">
+    <aside className="ops-panel ops-scrollbar max-h-[460px] overflow-y-auto rounded p-4 text-sm text-slate-300">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs text-slate-500">{"完整评论"}</p>
           <h3 className="mt-1 text-base font-semibold text-white">{authorLabel}</h3>
         </div>
-        <span className={cn("inline-flex rounded border px-2 py-1 text-xs", sentimentClassName[review.sentiment])}>
+        <span className={cn("ops-badge inline-flex rounded border px-2 py-1 text-xs", sentimentClassName[review.sentiment])}>
           {review.sentimentText}
         </span>
       </div>
@@ -143,7 +143,7 @@ function ReviewDetail({ review, authorLabel }: { review: Review; authorLabel: st
 
 function MetaPill({ children }: { children: string }) {
   return (
-    <span className="rounded border border-white/10 bg-white/5 px-2 py-1 text-xs text-slate-400">
+    <span className="ops-badge ops-tone-neutral rounded border px-2 py-1 text-xs">
       {children}
     </span>
   );
@@ -151,11 +151,31 @@ function MetaPill({ children }: { children: string }) {
 
 function DetailItem({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
-    <div className={cn("rounded border border-slate-800 bg-slate-900/45 p-3", className)}>
+    <div className={cn("ops-card rounded p-3", className)}>
       <p className="text-slate-500">{label}</p>
       <p className="mt-1 text-slate-100">{value}</p>
     </div>
   );
+}
+
+function getRecommendationClassName(recommendation: string): string {
+  return recommendation.includes("不") ? "ops-tone-negative" : "ops-tone-positive";
+}
+
+function getUrgencyClassName(urgency: string): string {
+  if (urgency.includes("高")) {
+    return "ops-priority-high";
+  }
+
+  if (urgency.includes("中")) {
+    return "ops-tone-warning";
+  }
+
+  if (urgency.includes("低")) {
+    return "ops-tone-neutral";
+  }
+
+  return "ops-tone-cyan";
 }
 
 function formatPlayerLabel(index: number): string {

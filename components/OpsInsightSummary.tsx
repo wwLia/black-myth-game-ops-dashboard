@@ -16,7 +16,7 @@ export function OpsInsightSummary({ reviews }: OpsInsightSummaryProps) {
   const summary = buildSummary(reviews);
 
   return (
-    <section className="rounded-lg border border-cyan-300/15 bg-slate-950/60 p-4 shadow-[0_0_28px_rgba(14,165,233,0.08)]">
+    <section className="ops-panel rounded-lg p-4">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold text-white">{"运营洞察摘要"}</h2>
@@ -36,7 +36,7 @@ export function OpsInsightSummary({ reviews }: OpsInsightSummaryProps) {
 
       <div className="mt-4 grid gap-3 lg:grid-cols-3">
         {summary.insights.map((insight, index) => (
-          <div key={insight} className="rounded border border-slate-800 bg-slate-900/45 p-3">
+          <div key={insight} className="ops-card rounded p-3">
             <p className="text-xs text-cyan-200">{`洞察 ${index + 1}`}</p>
             <p className="mt-2 text-sm leading-6 text-slate-200">{insight}</p>
           </div>
@@ -54,7 +54,7 @@ export function OpsInsightSummary({ reviews }: OpsInsightSummaryProps) {
 
 function InsightMetric({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
-    <div className={`rounded border border-slate-800 bg-slate-950/45 p-3 ${className ?? ""}`}>
+    <div className={`ops-card-muted rounded p-3 ${className ?? ""}`}>
       <p className="text-xs text-slate-500">{label}</p>
       <p className="mt-2 line-clamp-2 text-sm font-semibold leading-5 text-slate-100">{value}</p>
     </div>

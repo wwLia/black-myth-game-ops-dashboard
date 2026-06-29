@@ -103,7 +103,7 @@ export function PlaytimeDistributionChart({
           `<strong>${segment.range}</strong>`,
           `评论数：${segment.players.toLocaleString("zh-CN")}`,
           `推荐数：${segment.recommendedReviews.toLocaleString("zh-CN")}`,
-          `不推荐数：${segment.notRecommendedReviews.toLocaleString("zh-CN")}`,
+          `不推荐数：<span style="color:#fda4af">${segment.notRecommendedReviews.toLocaleString("zh-CN")}</span>`,
           `推荐率：${segment.recommendRate.toFixed(1)}%`,
         ].join("<br/>");
       },
@@ -145,7 +145,19 @@ export function PlaytimeDistributionChart({
             color:
               activeSegment === item.segment
                 ? "#67e8f9"
-                : {
+                : item.notRecommendedReviews > item.recommendedReviews
+                  ? {
+                      type: "linear",
+                      x: 0,
+                      y: 0,
+                      x2: 0,
+                      y2: 1,
+                      colorStops: [
+                        { offset: 0, color: "#f59e0b" },
+                        { offset: 1, color: "rgba(244,63,94,0.34)" },
+                      ],
+                    }
+                  : {
                     type: "linear",
                     x: 0,
                     y: 0,
@@ -188,7 +200,7 @@ export function PlaytimeDistributionChart({
   };
 
   return (
-    <div ref={chartContainerRef} className="relative min-h-[320px] min-w-0">
+    <div ref={chartContainerRef} className="ops-card-muted relative min-h-[320px] min-w-0 overflow-hidden rounded p-3">
       <DataSourceBadge sourceType="real" className="absolute right-3 top-2 z-10" />
       <ClientECharts
         option={option}
@@ -214,7 +226,7 @@ function finiteNumber(value: number): number {
 function ChartEmptyState({ height }: { height: number }) {
   return (
     <div
-      className="flex items-center justify-center rounded border border-slate-800 bg-slate-950/45 text-sm text-slate-500"
+      className="ops-card-muted flex items-center justify-center rounded text-sm text-slate-500"
       style={{ height }}
     >
       {"当前筛选条件下暂无真实评论时长分布数据"}

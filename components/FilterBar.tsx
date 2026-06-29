@@ -2,6 +2,7 @@
 
 import type { DashboardFilters } from "@/types/dashboard";
 import { DataSourceBadge } from "@/components/DataSourceBadge";
+import { cn } from "@/lib/utils";
 
 export type FilterBarProps = {
   filters: DashboardFilters;
@@ -32,18 +33,18 @@ export function FilterBar({
   };
 
   return (
-    <section className="rounded-lg border border-cyan-300/15 bg-slate-950/60 p-4 shadow-[0_0_28px_rgba(14,165,233,0.08)]">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+    <section className="ops-panel rounded-lg p-4">
+      <div className="ops-section-header flex flex-col gap-4 pl-5 xl:flex-row xl:items-center xl:justify-between">
         <div>
-          <h2 className="text-base font-semibold text-white">{"全局筛选器"}</h2>
-          <p className="mt-1 text-sm text-slate-400">
+          <h2 className="ops-section-title text-lg font-semibold">{"全局筛选器"}</h2>
+          <p className="ops-section-subtitle mt-1 text-sm">
             {"全局筛选器基于真实 Steam 评论样本，更新后 KPI、图表与评论列表同步刷新。"}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <label
-            className="flex h-10 cursor-pointer items-center gap-3 rounded border border-amber-300/25 bg-amber-300/10 px-3 text-sm text-amber-100 transition hover:bg-amber-300/15"
+            className="ops-focus-ring flex h-10 cursor-pointer items-center gap-3 rounded border border-amber-300/25 bg-amber-300/10 px-3 text-sm text-amber-100 transition hover:border-amber-300/45 hover:bg-amber-300/15"
             title="开启后会高亮适合面试讲解的核心业务模块"
           >
             <span>{"面试展示模式"}</span>
@@ -58,7 +59,7 @@ export function FilterBar({
           <button
             type="button"
             onClick={onResetFilters}
-            className="h-10 rounded border border-cyan-300/30 bg-cyan-300/10 px-4 text-sm text-cyan-100 transition hover:bg-cyan-300/20"
+            className="ops-focus-ring h-10 rounded border border-cyan-300/30 bg-cyan-300/10 px-4 text-sm text-cyan-100 transition hover:border-cyan-300/55 hover:bg-cyan-300/20"
           >
             {"重置筛选"}
           </button>
@@ -112,7 +113,7 @@ export function FilterBar({
         ) : null}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800 pt-3 text-xs text-slate-400">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-cyan-300/15 pt-3 text-xs text-slate-400">
         <DataSourceBadge sourceType="real" />
         <span>{"数据平台：Steam；未来可扩展其他平台，当前不生成跨平台结论。"}</span>
       </div>
@@ -134,7 +135,10 @@ function SelectField({ label, options, value, onChange }: SelectFieldProps) {
     <label className="block">
       <span className="mb-1 block text-xs text-slate-400">{label}</span>
       <select
-        className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 outline-none transition focus:border-cyan-300"
+        className={cn(
+          "ops-filter-select ops-focus-ring w-full rounded px-3 py-2 text-sm outline-none transition",
+          getFilterToneClass(label, value),
+        )}
         value={value}
         onChange={(event) => onChange(event.target.value)}
       >
@@ -146,6 +150,26 @@ function SelectField({ label, options, value, onChange }: SelectFieldProps) {
       </select>
     </label>
   );
+}
+
+function getFilterToneClass(label: string, value: string): string {
+  if (value === "全部") {
+    return "";
+  }
+
+  if (value.includes("不推荐") || value.includes("负向") || value.includes("风险")) {
+    return "is-negative";
+  }
+
+  if (value.includes("推荐") || value.includes("正向")) {
+    return "is-positive";
+  }
+
+  if (label.includes("优先级") && value.includes("高")) {
+    return "is-high";
+  }
+
+  return "";
 }
 
 function hasUsableDates(dateRanges: string[]): boolean {

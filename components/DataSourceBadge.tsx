@@ -15,10 +15,10 @@ const defaultLabel: Record<SourceType, string> = {
 };
 
 const badgeClassName: Record<SourceType, string> = {
-  real: "border-emerald-300/25 bg-emerald-300/10 text-emerald-100",
-  derived: "border-cyan-300/25 bg-cyan-300/10 text-cyan-100",
-  mock: "border-amber-300/25 bg-amber-300/10 text-amber-100",
-  future: "border-slate-300/20 bg-slate-300/10 text-slate-200",
+  real: "ops-badge-real",
+  derived: "ops-badge-derived",
+  mock: "ops-badge-mock",
+  future: "ops-badge-future",
 };
 
 export function DataSourceBadge({ sourceType, label, className }: DataSourceBadgeProps) {
@@ -26,6 +26,7 @@ export function DataSourceBadge({ sourceType, label, className }: DataSourceBadg
     <span
       className={cn(
         "inline-flex items-center rounded border px-2 py-1 text-xs font-medium",
+        "ops-badge",
         badgeClassName[sourceType],
         className,
       )}

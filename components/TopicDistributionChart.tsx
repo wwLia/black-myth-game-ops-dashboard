@@ -106,7 +106,7 @@ export function TopicDistributionChart({ data, activeTopic, onTopicClick }: Topi
           `<strong>${topic.topic}</strong>`,
           `评论数：${topic.reviewCount.toLocaleString("zh-CN")}`,
           `推荐数：${topic.recommendedReviews.toLocaleString("zh-CN")}`,
-          `不推荐数：${topic.notRecommendedReviews.toLocaleString("zh-CN")}`,
+          `不推荐数：<span style="color:#fda4af">${topic.notRecommendedReviews.toLocaleString("zh-CN")}</span>`,
           `推荐率：${topic.recommendRate.toFixed(1)}%${attentionNote}`,
         ].join("<br/>");
       },
@@ -149,7 +149,7 @@ export function TopicDistributionChart({ data, activeTopic, onTopicClick }: Topi
               activeTopic === item.topic
                 ? "#67e8f9"
                 : item.reviewCount > 0 && item.recommendRate < attentionThreshold
-                  ? "rgba(251,113,133,0.72)"
+                  ? "rgba(244,63,94,0.78)"
                   : {
                       type: "linear",
                       x: 0,
@@ -200,7 +200,7 @@ export function TopicDistributionChart({ data, activeTopic, onTopicClick }: Topi
   };
 
   return (
-    <div ref={chartContainerRef} className="relative min-h-[330px] min-w-0">
+    <div ref={chartContainerRef} className="ops-card-muted relative min-h-[330px] min-w-0 overflow-hidden rounded p-3">
       <DataSourceBadge sourceType="real" className="absolute right-3 top-2 z-10" />
       <ClientECharts
         option={option}
@@ -226,7 +226,7 @@ function finiteNumber(value: number): number {
 function ChartEmptyState({ height }: { height: number }) {
   return (
     <div
-      className="flex items-center justify-center rounded border border-slate-800 bg-slate-950/45 text-sm text-slate-500"
+      className="ops-card-muted flex items-center justify-center rounded text-sm text-slate-500"
       style={{ height }}
     >
       {"当前筛选条件下暂无真实评论主题分布数据"}

@@ -107,7 +107,7 @@ export function DashboardClient({ dashboardData }: DashboardClientProps) {
   };
 
   return (
-    <div className="mx-auto max-w-[1720px] space-y-5">
+    <div className="mx-auto max-w-[1720px] space-y-7">
       <DashboardHeader updatedAt={dashboardData.updatedAt} boundary={dataBoundary} />
 
       <KpiCards metrics={kpiMetrics} />
@@ -213,10 +213,10 @@ export function DashboardClient({ dashboardData }: DashboardClientProps) {
 
 function DashboardHeader({ updatedAt, boundary }: { updatedAt: string; boundary: ReturnType<typeof buildDataBoundary> }) {
   return (
-    <header className="rounded-lg border border-cyan-300/15 bg-slate-950/60 p-4 shadow-[0_0_28px_rgba(14,165,233,0.08)]">
+    <header className="ops-panel rounded-lg p-4">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-cyan-300">Game Ops Decision Prototype</p>
+          <p className="ops-kicker text-xs uppercase">Game Ops Decision Prototype</p>
           <h1 className="mt-2 text-2xl font-semibold text-white md:text-3xl">黑神话：悟空发行运营决策看板</h1>
           <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-400">
             基于真实 Steam 评论样本与明确规则推导，帮助发行、商务和运营负责人判断优先问题、责任团队和下一步动作。
@@ -238,7 +238,7 @@ function DashboardHeader({ updatedAt, boundary }: { updatedAt: string; boundary:
 
 function BoundaryItem({ label, value, sourceType }: { label: string; value: string; sourceType: SourceType }) {
   return (
-    <div className="rounded border border-slate-800 bg-slate-950/55 p-3">
+    <div className="ops-card-muted rounded p-3">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs text-slate-500">{label}</p>
         <DataSourceBadge sourceType={sourceType} className="text-[10px]" />
@@ -250,16 +250,16 @@ function BoundaryItem({ label, value, sourceType }: { label: string; value: stri
 
 function DashboardPanel({ title, subtitle, sourceType = "real", children }: DashboardPanelProps) {
   return (
-    <section className="rounded-lg border border-cyan-300/15 bg-slate-950/60 p-4 shadow-[0_0_28px_rgba(14,165,233,0.08)]">
-      <div className="mb-4 flex items-start justify-between gap-3">
+    <section className="ops-panel rounded-lg p-4">
+      <div className="ops-section-header mb-5 flex items-start justify-between gap-3 pl-5">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-base font-semibold text-white">{title}</h2>
+            <h2 className="ops-section-title text-lg font-semibold">{title}</h2>
             <DataSourceBadge sourceType={sourceType} />
           </div>
-          <p className="mt-1 text-xs text-slate-400">{subtitle}</p>
+          <p className="ops-section-subtitle mt-1 text-xs">{subtitle}</p>
         </div>
-        <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_16px_rgba(103,232,249,0.9)]" />
+        <span className="ops-pulse-dot h-2 w-2 rounded-full" />
       </div>
       {children}
     </section>
@@ -279,28 +279,28 @@ function ExecutiveSummary({
       : `当前筛选范围包含 ${formatNumber(reviews.length)} 条评论，可用于方向性观察；结论仍需结合典型评论和其他业务数据验证。`;
 
   return (
-    <section className="rounded-lg border border-cyan-300/15 bg-slate-950/60 p-4 shadow-[0_0_28px_rgba(14,165,233,0.08)]">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <section className="ops-panel rounded-lg p-4">
+      <div className="ops-section-header mb-5 flex flex-wrap items-center justify-between gap-3 pl-5">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-base font-semibold text-white">管理层摘要：核心发现与建议动作</h2>
+            <h2 className="ops-section-title text-lg font-semibold">管理层摘要：核心发现与建议动作</h2>
             <DataSourceBadge sourceType="derived" />
           </div>
-          <p className="mt-1 text-xs text-slate-400">基于当前筛选后的评论样本动态计算，不使用 Mock 数据。</p>
+          <p className="ops-section-subtitle mt-1 text-xs">基于当前筛选后的评论样本动态计算，不使用 Mock 数据。</p>
         </div>
       </div>
 
-      <p className="mb-4 rounded border border-slate-800 bg-slate-950/45 px-3 py-2 text-xs leading-5 text-slate-300">
+      <p className="ops-card-muted mb-4 rounded px-3 py-2 text-xs leading-5 text-slate-300">
         {sampleNote}
       </p>
 
       {items.length ? (
         <div className="space-y-3">
           <div className="hidden gap-4 xl:grid xl:grid-cols-2">
-            <h3 className="rounded border border-slate-800 bg-slate-950/45 px-3 py-2 text-sm font-semibold text-cyan-100">
+            <h3 className="ops-card-muted rounded px-3 py-2 text-sm font-semibold text-cyan-100">
               3 个核心发现
             </h3>
-            <h3 className="rounded border border-slate-800 bg-slate-950/45 px-3 py-2 text-sm font-semibold text-cyan-100">
+            <h3 className="ops-card-muted rounded px-3 py-2 text-sm font-semibold text-cyan-100">
               3 个对应行动
             </h3>
           </div>
@@ -311,7 +311,7 @@ function ExecutiveSummary({
           </div>
         </div>
       ) : (
-        <div className="rounded border border-slate-800 bg-slate-950/45 px-4 py-8 text-center text-sm text-slate-500">
+        <div className="ops-card-muted rounded px-4 py-8 text-center text-sm text-slate-500">
           当前筛选条件下暂无足够数据生成管理层摘要。
         </div>
       )}
@@ -320,12 +320,14 @@ function ExecutiveSummary({
 }
 
 function ExecutiveSummaryPair({ item }: { item: ExecutiveSummaryItem }) {
+  const toneClassName = getSummaryToneClass(item.category);
+
   return (
-    <div className="grid gap-3 xl:grid-cols-2 xl:items-stretch">
-      <div className="xl:hidden rounded border border-slate-800 bg-slate-950/45 px-3 py-2 text-sm font-semibold text-cyan-100">
+    <div className={`ops-summary-pair grid gap-3 xl:grid-cols-2 xl:items-stretch ${toneClassName}`}>
+      <div className="ops-summary-mobile xl:hidden rounded border border-slate-800 bg-slate-950/45 px-3 py-2 text-sm font-semibold text-cyan-100">
         {`核心发现 #${item.index}`}
       </div>
-      <article className="rounded border border-slate-800 bg-slate-900/35 p-3 text-sm">
+      <article className="ops-summary-card rounded border p-3 pl-4 text-sm">
         <SummaryCardHeader index={item.index} category={item.category} />
         <SummaryLine label="事实" value={item.finding.fact} />
         <SummaryLine label="判断" value={item.finding.judgment} />
@@ -333,10 +335,10 @@ function ExecutiveSummaryPair({ item }: { item: ExecutiveSummaryItem }) {
         {item.finding.businessImpact ? <SummaryLine label="业务影响" value={item.finding.businessImpact} /> : null}
       </article>
 
-      <div className="xl:hidden rounded border border-slate-800 bg-slate-950/45 px-3 py-2 text-sm font-semibold text-cyan-100">
+      <div className="ops-summary-mobile xl:hidden rounded border border-slate-800 bg-slate-950/45 px-3 py-2 text-sm font-semibold text-cyan-100">
         {`对应行动 #${item.index}`}
       </div>
-      <article className="rounded border border-slate-800 bg-slate-900/35 p-3 text-sm">
+      <article className="ops-summary-card rounded border p-3 pl-4 text-sm">
         <SummaryCardHeader index={item.index} category={item.category} />
         <SummaryLine label="对应发现" value={`对应核心发现 #${item.index}：${item.action.linkedFinding}`} />
         <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -356,20 +358,58 @@ function ExecutiveSummaryPair({ item }: { item: ExecutiveSummaryItem }) {
 }
 
 function SummaryCardHeader({ index, category }: { index: number; category: string }) {
+  const badgeClassName = getSummaryBadgeClass(category);
+
   return (
     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
       <span className="rounded border border-cyan-300/20 bg-cyan-300/10 px-2 py-1 text-xs text-cyan-100">
         {`#${index}`}
       </span>
-      <span className="rounded border border-white/10 bg-white/5 px-2 py-1 text-xs text-slate-300">{category}</span>
+      <span className={`rounded border px-2 py-1 text-xs ${badgeClassName}`}>{category}</span>
     </div>
   );
+}
+
+function getSummaryToneClass(category: string): string {
+  if (/风险|负面|流失|深度体验|早期体验|高优先级/.test(category)) {
+    return "ops-summary-risk";
+  }
+
+  if (/口碑|传播|机会|正向/.test(category)) {
+    return "ops-summary-opportunity";
+  }
+
+  return "ops-summary-neutral";
+}
+
+function getSummaryBadgeClass(category: string): string {
+  if (/深度体验|高优先级/.test(category)) {
+    return "ops-priority-high";
+  }
+
+  if (/负面|流失|早期体验/.test(category)) {
+    return "ops-tone-negative";
+  }
+
+  if (/待验证|体验阶段/.test(category)) {
+    return "ops-tone-cyan";
+  }
+
+  if (/口碑|正向/.test(category)) {
+    return "ops-tone-positive";
+  }
+
+  if (/传播|机会/.test(category)) {
+    return "ops-tone-purple";
+  }
+
+  return "ops-tone-neutral";
 }
 
 function SummaryLine({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "cyan" }) {
   return (
     <p className={`mt-1 leading-6 ${tone === "cyan" ? "text-cyan-100" : "text-slate-300"}`}>
-      <span className="text-slate-100">{`${label}：`}</span>
+      <span className="font-medium text-cyan-100">{`${label}：`}</span>
       {value}
     </p>
   );
@@ -381,7 +421,7 @@ function SentimentDistribution({ reviews }: { reviews: Review[] }) {
   const sentiments = ["正向", "中性", "负向"];
 
   return (
-    <div className="rounded border border-slate-800 bg-slate-950/45 p-4">
+    <div className="ops-card-muted rounded p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-white">情绪分布</h3>
         <DataSourceBadge sourceType="derived" />
@@ -390,11 +430,11 @@ function SentimentDistribution({ reviews }: { reviews: Review[] }) {
         {sentiments.map((sentiment) => {
           const count = counts.get(sentiment) ?? 0;
           return (
-            <div key={sentiment} className="rounded border border-slate-800 bg-slate-900/35 p-3">
+            <div key={sentiment} className={`ops-card rounded p-3 ${getSentimentToneClass(sentiment)}`}>
               <p className="text-xs text-slate-500">{sentiment}</p>
               <p className="mt-1 text-2xl font-semibold text-white">{formatNumber(count)}</p>
               <div className="mt-2 h-2 overflow-hidden rounded bg-slate-800">
-                <div className="h-full bg-cyan-300" style={{ width: `${(count / total) * 100}%` }} />
+                <div className={`h-full ${getSentimentBarClass(sentiment)}`} style={{ width: `${(count / total) * 100}%` }} />
               </div>
             </div>
           );
@@ -404,6 +444,30 @@ function SentimentDistribution({ reviews }: { reviews: Review[] }) {
   );
 }
 
+function getSentimentToneClass(sentiment: string): string {
+  if (sentiment.includes("负")) {
+    return "ops-tone-negative";
+  }
+
+  if (sentiment.includes("正")) {
+    return "ops-tone-positive";
+  }
+
+  return "ops-tone-neutral";
+}
+
+function getSentimentBarClass(sentiment: string): string {
+  if (sentiment.includes("负")) {
+    return "bg-rose-400";
+  }
+
+  if (sentiment.includes("正")) {
+    return "bg-emerald-400";
+  }
+
+  return "bg-slate-400";
+}
+
 function PublishingActionPanel({ data }: { data: ReturnType<typeof buildPublishingActions> }) {
   return (
     <div className="space-y-4">
@@ -411,7 +475,7 @@ function PublishingActionPanel({ data }: { data: ReturnType<typeof buildPublishi
         <PublishingColumn title="风险侧" items={data.risks} tone="rose" />
         <PublishingColumn title="机会侧" items={data.opportunities} tone="emerald" />
       </div>
-      <div className="rounded border border-slate-800 bg-slate-950/45 p-3 text-sm text-slate-300">
+      <div className="ops-card-muted rounded p-3 text-sm text-slate-300">
         未来接入多语言评论后，可支持海外本地化和文化理解分析。
       </div>
     </div>
@@ -428,24 +492,27 @@ function PublishingColumn({
   tone: "rose" | "emerald";
 }) {
   const titleClassName = tone === "rose" ? "text-rose-100" : "text-emerald-100";
+  const columnClassName =
+    tone === "rose" ? "ops-publishing-column ops-publishing-risk" : "ops-publishing-column ops-publishing-opportunity";
+  const articleClassName = tone === "rose" ? "ops-summary-risk" : "ops-summary-opportunity";
 
   return (
-    <div className="rounded border border-slate-800 bg-slate-950/45 p-3">
-      <h3 className={`text-sm font-semibold ${titleClassName}`}>{title}</h3>
+    <div className={`ops-card-muted rounded p-4 pl-5 ${columnClassName}`}>
+      <h3 className={`text-base font-semibold ${titleClassName}`}>{title}</h3>
       <div className="mt-3 grid gap-3">
         {items.map((item, index) => (
-          <article key={`${title}-${index}`} className="rounded border border-slate-800 bg-slate-900/35 p-3 text-sm">
+          <article key={`${title}-${index}`} className={`ops-summary-card rounded border p-3 pl-4 text-sm ${articleClassName}`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h4 className="font-medium text-white">{item.title}</h4>
-              <span className="rounded border border-white/10 bg-white/5 px-2 py-1 text-xs text-slate-300">
+              <span className={`ops-badge rounded border px-2 py-1 text-xs ${getTeamToneClassName(item.owner)}`}>
                 {item.owner}
               </span>
             </div>
             <p className="mt-2 text-xs leading-5 text-slate-400">{item.evidence}</p>
             <div className="mt-3 grid gap-2 text-xs md:grid-cols-3">
-              <MetaBox label="目标人群" value={item.audience} />
-              <MetaBox label="推荐渠道" value={item.channel} />
-              <MetaBox label="内容形式" value={item.format} />
+              <MetaBox label="目标人群" value={item.audience} className="ops-tone-neutral" />
+              <MetaBox label="推荐渠道" value={item.channel} className={getChannelToneClassName(item.channel)} />
+              <MetaBox label="内容形式" value={item.format} className={getActionToneClassName(item.format)} />
             </div>
           </article>
         ))}
@@ -457,7 +524,7 @@ function PublishingColumn({
 function MethodAndLimitations({ boundary }: { boundary: ReturnType<typeof buildDataBoundary> }) {
   return (
     <div className="space-y-3">
-      <details className="rounded border border-slate-800 bg-slate-950/45 p-3" open>
+      <details className="ops-card-muted rounded p-3" open>
         <summary className="cursor-pointer text-sm font-semibold text-white">数据与方法说明</summary>
         <div className="mt-3 grid gap-2 text-sm text-slate-300 md:grid-cols-2">
           <MethodItem label="数据来源" value="阿里云天池 Steam 评论样本；Steam 是否推荐为原始态度字段。" />
@@ -472,7 +539,7 @@ function MethodAndLimitations({ boundary }: { boundary: ReturnType<typeof buildD
           <MethodItem label="数据边界" value="真实样本用于统计，分析推导用于判断，Mock 演示仅展示未来接入形态，未来接入不参与当前结论。" />
         </div>
       </details>
-      <details className="rounded border border-slate-800 bg-slate-950/45 p-3">
+      <details className="ops-card-muted rounded p-3">
         <summary className="cursor-pointer text-sm font-semibold text-white">当前局限性</summary>
         <ul className="mt-3 grid gap-2 text-sm leading-6 text-slate-300 md:grid-cols-2">
           <li>Steam 评论用户不代表全部玩家。</li>
@@ -485,7 +552,7 @@ function MethodAndLimitations({ boundary }: { boundary: ReturnType<typeof buildD
           <li>Mock 数据不能用于支持真实业务结论。</li>
         </ul>
       </details>
-      <div className="rounded border border-slate-800 bg-slate-950/45 p-3">
+      <div className="ops-card-muted rounded p-3">
         <h3 className="text-sm font-semibold text-white">未来可接入数据</h3>
         <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
           {[
@@ -497,7 +564,7 @@ function MethodAndLimitations({ boundary }: { boundary: ReturnType<typeof buildD
             "社区和客服工单",
             "媒体、KOL 和代理商传播数据",
           ].map((item) => (
-            <span key={item} className="rounded border border-slate-700 bg-slate-900/45 px-2 py-1">
+            <span key={item} className="ops-badge ops-badge-future rounded border px-2 py-1">
               {item}
             </span>
           ))}
@@ -509,26 +576,102 @@ function MethodAndLimitations({ boundary }: { boundary: ReturnType<typeof buildD
 
 function MethodItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded border border-slate-800 bg-slate-900/35 p-3">
+    <div className="ops-card rounded p-3">
       <p className="text-xs text-slate-500">{label}</p>
       <p className="mt-1 leading-6">{value}</p>
     </div>
   );
 }
 
-function MetaBox({ label, value }: { label: string; value: string }) {
+function MetaBox({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
-    <div className="rounded border border-slate-800 bg-slate-950/45 p-2">
+    <div className={`ops-card-muted rounded p-2 ${className ?? ""}`}>
       <p className="text-slate-500">{label}</p>
       <p className="mt-1 text-slate-100">{value}</p>
     </div>
   );
 }
 
+function getTeamToneClassName(team: string): string {
+  if (/技术/.test(team)) {
+    return "ops-tone-cyan";
+  }
+
+  if (/策划/.test(team)) {
+    return "ops-tone-purple";
+  }
+
+  if (/运营/.test(team)) {
+    return "ops-tone-warning";
+  }
+
+  if (/社区/.test(team)) {
+    return "ops-tone-positive";
+  }
+
+  if (/发行/.test(team)) {
+    return "ops-tone-purple";
+  }
+
+  if (/客服/.test(team)) {
+    return "ops-tone-blue";
+  }
+
+  return "ops-tone-neutral";
+}
+
+function getChannelToneClassName(channel: string): string {
+  if (/FAQ/.test(channel)) {
+    return "ops-tone-warning";
+  }
+
+  if (/攻略|UGC/.test(channel)) {
+    return "ops-tone-positive";
+  }
+
+  if (/开发者/.test(channel)) {
+    return "ops-tone-purple";
+  }
+
+  if (/KOL|媒体/.test(channel)) {
+    return "ops-tone-purple";
+  }
+
+  if (/公告|Brief/.test(channel)) {
+    return "ops-tone-cyan";
+  }
+
+  return "ops-tone-neutral";
+}
+
+function getActionToneClassName(action: string): string {
+  if (/修复|退款/.test(action)) {
+    return "ops-tone-negative";
+  }
+
+  if (/复核|FAQ|说明/.test(action)) {
+    return "ops-tone-warning";
+  }
+
+  if (/验证/.test(action)) {
+    return "ops-tone-cyan";
+  }
+
+  if (/攻略|征集|UGC/.test(action)) {
+    return "ops-tone-positive";
+  }
+
+  if (/Brief|脚本|素材/.test(action)) {
+    return "ops-tone-purple";
+  }
+
+  return "ops-tone-neutral";
+}
+
 function OpsEventDetailPanel({ event, reviews }: { event?: OpsEvent; reviews: Review[] }) {
   if (!event) {
     return (
-      <div className="mt-4 rounded border border-slate-800 bg-slate-950/45 p-4 text-sm text-slate-400">
+      <div className="ops-card-muted mt-4 rounded p-4 text-sm text-slate-400">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <DataSourceBadge sourceType="mock" />
           <span className="text-xs text-slate-500">点击折线图事件节点查看对应期间评论样本。</span>

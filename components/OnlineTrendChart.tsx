@@ -112,7 +112,7 @@ export function OnlineTrendChart({ data, opsEvents, onEventClick }: OnlineTrendC
   };
 
   return (
-    <div className="relative">
+    <div className="ops-card-muted relative overflow-hidden rounded p-3">
       <ClientECharts option={option} onEvents={onEvents} style={{ width: "100%", height: 330 }} notMerge lazyUpdate />
       <DataSourceBadge sourceType="mock" className="absolute right-3 top-2" />
       <span className="absolute right-3 top-11 text-xs text-slate-400">
@@ -135,7 +135,7 @@ function formatTime(timestamp: string): string {
 function ChartEmptyState({ height }: { height: number }) {
   return (
     <div
-      className="flex items-center justify-center rounded border border-slate-800 bg-slate-950/45 text-sm text-slate-500"
+      className="ops-card-muted flex items-center justify-center rounded text-sm text-slate-500"
       style={{ height }}
     >
       {"暂无 Mock 数据"}
